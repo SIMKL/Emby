@@ -1,0 +1,99 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Simkl</title>
+</head>
+<body>
+    <div data-role="page" class="page type-interior pluginConfigurationPage" id="SimklConfigurationPage">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="SimklConfigurationForm">
+                    <div class="fieldDescription">
+                        <h2 id="loginMsg">You are not logged in</h2>
+                        <button id="loginButton" is="emby-button" type="button" class="raised block">Log Out</button>
+                        <!-- If user is not logged in, then show instructions and pin -->
+                    </div>
+                    <div>
+                        <h2>Scrobbling Options</h2>
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input id="autoscrobble" class="emby-checkbox" type="checkbox" is="emby-checkbox" data-embycheckbox="true">
+                                <span class="checkboxLabel">Enable autoscrobbling</span>
+                                <span class="emby-checkbox-focushelper"></span>
+                                <span class="checkboxOutline"><i class="md-icon checkboxIcon checkboxIcon-checked"></i><i class="md-icon checkboxIcon checkboxIcon-unchecked"></i></span>
+                            </label>
+                        </div>
+                        <div class="checkboxContainer">
+                            <label class="emby-checkbox-label">
+                                <input id="bubble" class="emby-checkbox" type="checkbox" is="emby-checkbox" data-embycheckbox="true">
+                                <span class="checkboxLabel">Show bubble when scrobbling</span>
+                                <span class="emby-checkbox-focushelper"></span>
+                                <span class="checkboxOutline"><i class="md-icon checkboxIcon checkboxIcon-checked"></i><i class="md-icon checkboxIcon checkboxIcon-unchecked"></i></span>
+                            </label>
+                        </div>
+
+                        <label for="scr_pct">Scrobbling percentage</label>
+                        <input type="range" min="0" max="100" class="slider" id="scr_pct" />
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="min_length">Min length for scrobbling:</label><input name="min_length" class="emby-input" id="min_length" required="" type="number" min="0" max="60" pattern="[0-9]*" is="emby-input" label="Min length for scrobbling:">
+                            <div class="fieldDescription">
+                                Length needed (in minutes) for a clip to be scrobbled. This way, short videos and trailers won't be scrobbled
+                            </div>
+                        </div>
+                    </div>
+                    <br />
+                    <br />
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block emby-button">Save</button>
+                        <button is="emby-button" type="button" onclick="history.back();" class="raised block emby-button">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script type="text/javascript">
+            var guid = "2ecd91d5-b14b-4b92-8eb9-52c098edfc87";
+
+            $(document).ready(function () {
+                $("input").focus(function () {
+                    $(this).siblings("label").addClass("inputLabelFocused");
+                    $(this).siblings("label").removeClass("inputLabelUnfocused");
+                });
+
+                $("input").focusout(function () {
+                    $(this).siblings("label").removeClass("inputLabelFocused");
+                    $(this).siblings("label").addClass("inputLabelUnfocused");
+                });
+            });
+
+            $("#SimklConfigurationPage").on("pageshow", function (e) {
+                Dashboard.showLoadingMsg();
+                ApiClient.getPluginConfiguration(guid).then(function (config) {
+                    $("#scr_pct").val(config.scr_pct);
+                    $("#min_length").val(config.min_length);
+
+                    $("#autoscrobble").checked(config.autoscrobble);
+                    $("#bubble").checked(config.bubble);
+
+                    Dashboard.hideLoadingMsg();
+                });
+            });
+
+            $("#SimklConfigurationPage").on("submit", function (e) {
+                Dashboard.showLoadingMsg();
+
+                ApiClient.getPluginConfiguration(guid).then(function (config) {
+                    config.scr_pct = $("#scr_pct").val();
+                    config.min_length = $("#min_length").val();
+
+                    ApiClient.updatePluginConfiguration(guid, config).then(Dashboard.processPluginConfigurationUpdateResult);
+                    Dashboard.hideLoadingMsg();
+                });
+
+                // Don't do the 'default' submit
+                return false;
+            });
+        </script>
+    </div>
+</body>
+</html>

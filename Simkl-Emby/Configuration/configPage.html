@@ -4,50 +4,50 @@
     <title>Simkl</title>
 </head>
 <body>
-    <div data-role="page" class="page type-interior pluginConfigurationPage" id="SimklConfigurationPage">
+    <div data-role="page" class="page type-interior pluginConfigurationPage" id="SimklConfigurationPage" data-require="emby-button,emby-checkbox,emby-input">
         <div data-role="content">
             <div class="content-primary">
                 <form id="SimklConfigurationForm">
-                    <div class="fieldDescription">
-                        <h2 id="loginMsg">You are not logged in</h2>
-                        <button id="loginButton" is="emby-button" type="button" class="raised block">Log Out</button>
-                        <!-- If user is not logged in, then show instructions and pin -->
+                    <!-- <div class="fieldDescription">
+                    <h2 id="loginMsg">You are not logged in</h2>
+                    <button id="loginButton" is="emby-button" type="button" class="raised block">Log Out</button> -->
+                    <!-- If user is not logged in, then show instructions and pin -->
+                    <!--</div>-->
+                    <h1>Log In</h1>
+                    <h2 id="loginMsg">You are not logged in</h2>
+                    <button id="loginButton" is="emby-button" type="button" class="raised block"><span>Log Out</span></button>
+                    <h1>Scrobbling Options</h1>
+                    <div class="checkboxContainer">
+                        <label>
+                            <input is="emby-checkbox" type="checkbox" id="autoscrobble" />
+                            <span>Enable autoscrobbling</span>
+                        </label>
                     </div>
-                    <div>
-                        <h2>Scrobbling Options</h2>
-                        <div class="checkboxContainer">
-                            <label class="emby-checkbox-label">
-                                <input id="autoscrobble" class="emby-checkbox" type="checkbox" is="emby-checkbox" data-embycheckbox="true">
-                                <span class="checkboxLabel">Enable autoscrobbling</span>
-                                <span class="emby-checkbox-focushelper"></span>
-                                <span class="checkboxOutline"><i class="md-icon checkboxIcon checkboxIcon-checked"></i><i class="md-icon checkboxIcon checkboxIcon-unchecked"></i></span>
-                            </label>
-                        </div>
-                        <div class="checkboxContainer">
-                            <label class="emby-checkbox-label">
-                                <input id="bubble" class="emby-checkbox" type="checkbox" is="emby-checkbox" data-embycheckbox="true">
-                                <span class="checkboxLabel">Show bubble when scrobbling</span>
-                                <span class="emby-checkbox-focushelper"></span>
-                                <span class="checkboxOutline"><i class="md-icon checkboxIcon checkboxIcon-checked"></i><i class="md-icon checkboxIcon checkboxIcon-unchecked"></i></span>
-                            </label>
-                        </div>
 
-                        <label for="scr_pct">Scrobbling percentage</label>
-                        <input type="range" min="0" max="100" class="slider" id="scr_pct" />
+                    <div class="checkboxContainer">
+                        <label>
+                            <input is="emby-checkbox" type="checkbox" id="bubble" />
+                            <span>Show bubble while scrobbling</span>
+                        </label>
+                    </div>
 
-                        <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="min_length">Min length for scrobbling:</label><input name="min_length" class="emby-input" id="min_length" required="" type="number" min="0" max="60" pattern="[0-9]*" is="emby-input" label="Min length for scrobbling:">
-                            <div class="fieldDescription">
-                                Length needed (in minutes) for a clip to be scrobbled. This way, short videos and trailers won't be scrobbled
-                            </div>
+                    <div class="inputContainer">
+                        <input is="emby-input" id="scr_pct" type="number" min="0" max="100" pattern="[0-9]*" label="Scrobbling percentage:" />
+                        <div class="fieldDescription">
+                            Percentage watched needed to scrobble
+                        </div>
+                    </div>
+
+                    <div class="inputContainer">
+                        <input is="emby-input" id="min_length" type="number" min="0" max="60" pattern="[0-9]*" label="Min length:" />
+                        <div class="fieldDescription">
+                            Length needed (in minutes) for a clip to be scrobbled. This way, short videos and trailers won't be scrobbled
                         </div>
                     </div>
                     <br />
                     <br />
-                    <div>
-                        <button is="emby-button" type="submit" class="raised button-submit block">Save</button>
-                        <button is="emby-button" type="button" onclick="history.back();" class="raised block">Cancel</button>
-                    </div>
+                    <button is="emby-button" type="submit" class="raised button-submit block"><span>${ButtonSave}</span></button>
+                    <button is="emby-button" type="button" onclick="history.back();" class="raised block"><span>${ButtonCancel}</span></button>
                 </form>
             </div>
         </div>

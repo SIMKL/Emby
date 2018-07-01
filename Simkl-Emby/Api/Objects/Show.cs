@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Simkl.Api.Objects
 {
-    class Show
+    public class SimklShow
     {
         public string title { get; set; }
         public int year { get; set; }
@@ -12,14 +12,14 @@ namespace Simkl.Api.Objects
         public Season[] seasons { get; set; }
     }
 
-    struct episode
-    {
-        int number;
-    }
-
-    class Season
+    public class ShowEpisode: MediaObject
     {
         public int number { get; set; }
-        public episode[] episodes { get; set; }
+    }
+
+    public class Season: MediaObject
+    {
+        public int number { get; set; }
+        public ShowEpisode[] episodes { get; set; }
     }
 }

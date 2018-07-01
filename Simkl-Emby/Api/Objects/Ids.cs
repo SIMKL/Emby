@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Simkl.Api.Objects
 {
-    class Ids
+    public class Ids
     {
         public int simkl { get; set; }
         public int tvdb { get; set; }

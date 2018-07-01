@@ -28,7 +28,7 @@ namespace Simkl
                 new PluginPageInfo
                 {
                     Name = "Simkl",
-                    EmbeddedResourcePath = "Simkl-Emby.Configuration.configPage.html"
+                    EmbeddedResourcePath = "Simkl.Configuration.configPage.html"
                 }
             };
 

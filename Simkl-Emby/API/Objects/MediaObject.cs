@@ -4,8 +4,8 @@ using System.Text;
 
 namespace Simkl.Api.Objects
 {
-    public class SimklEpisode: MediaObject
+    public class MediaObject
     {
-        public DateTime watched_at { get; set; }
+        public Ids ids { get; set; }
     }
 }

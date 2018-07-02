@@ -2,7 +2,6 @@
 <html>
 <head>
     <title>Simkl</title>
-    <script type="text/javascript" src="SimklAPILogin.js"></script>
 </head>
 <body>
     <div data-role="page" class="page type-interior pluginConfigurationPage" id="SimklConfigurationPage" data-require="emby-button,emby-checkbox,emby-input">
@@ -121,7 +120,7 @@
                     // Todo: Don't check if window is not focused
                 },
                 getUsername: function () {
-                    // Not implemented yet
+                    this.getCode();
                 }
             }
 

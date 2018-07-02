@@ -16,7 +16,7 @@
                         <h3 id="loginPin"></h3>
                     </div>
                     <div id="loggedIn" hidden>
-                        <button id="loginButton" is="emby-button" type="button" class="raised block"><span>Log Out</span></button>
+                        <button id="logOutButton" is="emby-button" type="button" class="raised block"><span>Log Out</span></button>
                     </div>
                     <h1>Scrobbling Options</h1>
                     <div class="checkboxContainer">
@@ -57,40 +57,73 @@
             var guid = "2ecd91d5-b14b-4b92-8eb9-52c098edfc87";
 
             var SimklAPI = {
-                getCode: function (div_id) {
+                auth_pending:false,
+                user_code:"",
+                interval: 5,
+                timeout: 500,
+                access_token: "",
+                getCode: function () {
                     // var uri = ApiClient._serverAddress + "/Simkl/oauth/pin";
                     var uri = "/Simkl/oauth/pin";
-                    var request = new XMLHttpRequest;
+                    var request = new XMLHttpRequest();
 
-                    request.open("GET", uri);
-
-                    request.onreadystatechange = function () {
-                        // TODO: Retry if status != 200
-                        if (this.readyState === 4 && this.status == 200) {
-                            console.log('Headers:', this.getAllResponseHeaders());
-                            console.log('Body:', this.response);
-                            var user_code = $.parseJSON(this.response).user_code;
-                            console.log("user_code: " + user_code);
-                            $(div_id).html(user_code)
-                        }
-                    };
-
+                    console.log("Getting " + uri);
+                    request.open("GET", uri, false);
                     request.send();
+
+                    console.log("Status: " + request.status);
+                    console.log("Response: " + request.response);
+                    var response = $.parseJSON(request.response);
+                    this.user_code = response.user_code;
+                    this.interval = response.interval + 1;
+                    this.timeout = response.expires_in;
+                    this.auth_pending = true;
+
+                    return request.status == 200;
+                },
+                checkCodeStatus: function (obj) {
+                    if (document.hasFocus()) {
+                        if (!obj.auth_pending || new Date() > obj.finish) clearInterval(obj.chkCodeInterval);
+                        else {
+                            var uri = "/Simkl/oauth/pin/" + obj.user_code;
+                            var r = new XMLHttpRequest();
+                            r.open("GET", uri, false);
+                            console.log("Getting " + uri);
+                            r.send();   // Request sent
+
+                            if (r.status == 200) {
+                                var response = $.parseJSON(r.response);
+                                obj.access_token = response.access_token;
+                                obj.auth_pending = response.message == "Authorization pending";
+                                console.log("Checking code status " + JSON.stringify(obj));
+                                console.log("Response: " + JSON.stringify(response));
+
+                                if(response.result == "OK") obj.setCodeInConfig();
+                            }
+                        }
+                    }
+                },
+                setCodeInConfig: function () {
+                    ApiClient.getPluginConfiguration(guid).then(function (config) {
+                        config.userToken = SimklAPI.access_token;
+
+                        ApiClient.updatePluginConfiguration(guid, config); //.then(Dashboard.processPluginConfigurationUpdateResult);
+                    });
+                },
+                logIn: async function (div_id) {
+                    this.getCode();
+                    this.finish = new Date();
+                    this.finish.setSeconds(this.finish.getSeconds() + this.timeout - 5 * this.interval)
+
+                    $(div_id).html(this.user_code);
+                    console.log("this: " + JSON.stringify(this));
+                    this.chkCodeInterval = setInterval(this.checkCodeStatus, this.interval * 1000, this);
+                    // Todo: Don't check if window is not focused
+                },
+                getUsername: function () {
+                    // Not implemented yet
                 }
-
             }
-
-            $(document).ready(function () {
-                $("input").focus(function () {
-                    $(this).siblings("label").addClass("inputLabelFocused");
-                    $(this).siblings("label").removeClass("inputLabelUnfocused");
-                });
-
-                $("input").focusout(function () {
-                    $(this).siblings("label").removeClass("inputLabelFocused");
-                    $(this).siblings("label").addClass("inputLabelUnfocused");
-                });
-            });
 
             $("#SimklConfigurationPage").on("pageshow", function (e) {
                 Dashboard.showLoadingMsg();
@@ -103,11 +136,14 @@
 
                     if (config.userToken != "" && config.userToken != null) {
                         console.log("User is logged in with token " + config.userToken);
+                        SimklAPI.user_code = config.userToken;
+                        username = SimklAPI.getUsername();
+                        $("#logOutButton").before("Hello again <here the username>!");
                         $("#loggedIn").show();
                     } else {
                         console.log("User is not logged in, showing pin and all the things");
                         $("#loginMsg").after("Please visit <a href='https://simkl.com/pin'>https://simkl.com/pin</a> on your phone or computer and enter the following code:");
-                        SimklAPI.getCode("#loginPin");
+                        SimklAPI.logIn("#loginPin");
                         $("#notLoggedIn").show();
                     }
 

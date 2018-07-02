@@ -15,6 +15,13 @@ namespace Simkl.Api
         // Doesn't receive anything
     }
 
+    [Route("/Simkl/oauth/pin/{user_code}", "GET")]
+    public class GetPinStatus : IReturn <CodeStatusResponse>
+    {
+        [ApiMember(Name = "user_code", Description = "pin to be introduced by the user", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
+        public string user_code { get; set; }
+    }
+
     class ServerEndpoint : IService
     {
         private readonly SimklApi _api;
@@ -30,6 +37,11 @@ namespace Simkl.Api
         public CodeResponse Get(GetPin request)
         {
             return _api.getCode().Result;
+        }
+
+        public CodeStatusResponse Get(GetPinStatus request)
+        {
+            return _api.getCodeStatus(request.user_code).Result;
         }
     }
 }

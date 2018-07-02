@@ -23,10 +23,17 @@ namespace Simkl.Api
         private readonly IHttpClient _httpClient;
 
         /* BASIC API THINGS */
+        public const string BASE_URL = @"https://api.simkl.com";
+
+        /* I PROBABLY SHOULDN'T DO THIS
         public const string REDIRECT_URI = @"urn:ietf:wg:oauth:2.0:oob";
         public const string APIKEY = @"27dd5d6adc24aa1ad9f95ef913244cbaf6df5696036af577ed41670473dc97d0";
         public const string SECRET = @"d7b9feb9d48bbaa69dbabaca21ba4671acaa89198637e9e136a4d69ec97ab68b";
-        public const string BASE_URL = @"https://api.simkl.com";
+        */
+        // trackl scrobbler
+        public const string REDIRECT_URI = @"simkl.com";
+        public const string APIKEY = @"a3b69664791d24d550bfc3f12dc8053a8ccd79ad9230c03bf0244bde8ac15493";
+        public const string SECRET = @"49b0934a2708fb0a2785cb24bf9069d286937ab274fd589fecc2125855c0046f";
 
         private HttpRequestOptions GetOptions(string userToken = null)
         {
@@ -51,7 +58,14 @@ namespace Simkl.Api
 
         public async Task<CodeResponse> getCode()
         {
-            return _json.DeserializeFromStream<CodeResponse>(await _get(String.Format("/oauth/pin?client_id={0}&redirect={1}", APIKEY, REDIRECT_URI)));
+            string uri = String.Format("/oauth/pin?client_id={0}&redirect={1}", APIKEY, REDIRECT_URI);
+            return _json.DeserializeFromStream<CodeResponse>(await _get(uri));
+        }
+
+        public async Task<CodeStatusResponse> getCodeStatus(string user_code)
+        {
+            string uri = String.Format("/oauth/pin/{0}?client_id={1}", user_code, APIKEY);
+            return _json.DeserializeFromStream<CodeStatusResponse>(await _get(uri));
         }
 
 

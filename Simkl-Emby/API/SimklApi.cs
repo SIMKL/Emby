@@ -35,7 +35,12 @@ namespace Simkl.Api
             HttpRequestOptions options = new HttpRequestOptions
             {
                 RequestContentType = "application/json",
-                LogRequest = true
+                LogRequest = true,
+                LogRequestAsDebug = true,
+                LogResponse = true,
+                LogResponseHeaders = true,
+                LogErrorResponseBody = true,
+                EnableDefaultUserAgent = true // ??
             };
             options.RequestHeaders.Add("simkl-api-key", APIKEY);
             // options.RequestHeaders.Add("Content-Type", "application/json");

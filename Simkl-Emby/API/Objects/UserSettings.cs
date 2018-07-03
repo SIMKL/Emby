@@ -4,13 +4,14 @@ using System.Text;
 
 namespace Simkl.Api.Objects
 {
-    class UserSettings
+    public class UserSettings
     {
         public User user { get; set; }
         public Account account { get; set; }
+
     }
 
-    class User
+    public class User
     {
         public string name { get; set; }
         public DateTime joined_at { get; set; }
@@ -21,14 +22,14 @@ namespace Simkl.Api.Objects
         public string age { get; set; }
     }
 
-    class Account
+    public class Account
     {
         public int id { get; set; }
         public string timezone { get; set; }
     }
 
-    class Connections
+    public class Connections
     {
-        // TODO: Not implemented yet
+        public bool facebook { get; set; }
     }
 }

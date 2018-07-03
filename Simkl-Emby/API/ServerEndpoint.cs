@@ -5,6 +5,7 @@ using System.Text;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Services;
 
+using Simkl.Api.Objects;
 using Simkl.Api.Responses;
 
 namespace Simkl.Api
@@ -20,6 +21,13 @@ namespace Simkl.Api
     {
         [ApiMember(Name = "user_code", Description = "pin to be introduced by the user", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "GET")]
         public string user_code { get; set; }
+    }
+
+    [Route("/Simkl/users/settings", "POST")]
+    public class GetUserSettings : IReturn<UserSettings>
+    {
+        [ApiMember(Name = "client_id", Description = "client 'password'", IsRequired = true, DataType = "string", ParameterType = "query", Verb = "POST")]
+        public string client_id { get; set; }
     }
 
     class ServerEndpoint : IService
@@ -42,6 +50,11 @@ namespace Simkl.Api
         public CodeStatusResponse Get(GetPinStatus request)
         {
             return _api.getCodeStatus(request.user_code).Result;
+        }
+
+        public UserSettings Post(GetUserSettings request)
+        {
+            return _api.getUserSettings("fb7a0d9994662121be2c646c287704e41aa8689733b30c74390b69de1931d912").Result;
         }
     }
 }

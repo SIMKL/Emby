@@ -19,13 +19,14 @@ namespace Simkl.Api
     {
         /* INTERFACES */
         private readonly IJsonSerializer _json;
-        private readonly ILogger logger;
+        private readonly ILogger _logger;
         private readonly IHttpClient _httpClient;
 
         /* BASIC API THINGS */
         public const string BASE_URL = @"https://api.simkl.com";
+        // public const string BASE_URL = @"http://private-9c39b-simkl.apiary-mock.com";
 
-        public const string REDIRECT_URI = @"urn:ietf:wg:oauth:2.0:oob";
+        public const string REDIRECT_URI = @"https://ddavo.me/redirected?from=EmbySimkl";
         public const string APIKEY = @"27dd5d6adc24aa1ad9f95ef913244cbaf6df5696036af577ed41670473dc97d0";
         public const string SECRET = @"d7b9feb9d48bbaa69dbabaca21ba4671acaa89198637e9e136a4d69ec97ab68b";
 
@@ -38,7 +39,8 @@ namespace Simkl.Api
             };
             options.RequestHeaders.Add("simkl-api-key", APIKEY);
             // options.RequestHeaders.Add("Content-Type", "application/json");
-            if ( !string.IsNullOrEmpty(userToken) )options.RequestHeaders.Add("authorization", "Bearer " + userToken);
+            if ( !string.IsNullOrEmpty(userToken) )
+                options.RequestHeaders.Add("authorization", "Bearer " + userToken);
 
             return options;
         }
@@ -46,7 +48,7 @@ namespace Simkl.Api
         public SimklApi(IJsonSerializer json, ILogger logger, IHttpClient httpClient)
         {
             _json = json;
-            this.logger = logger;
+            _logger = logger;
             _httpClient = httpClient;
         }
 
@@ -62,6 +64,12 @@ namespace Simkl.Api
             return _json.DeserializeFromStream<CodeStatusResponse>(await _get(uri));
         }
 
+        public async Task<UserSettings> getUserSettings(string user_code)
+        {
+            string uri = String.Format("/users/settings");
+            return _json.DeserializeFromStream<UserSettings>(await _post(uri, user_code));
+        }
+
 
         // It should return the unserialized response (string)
         // TODO: Return serialized response
@@ -73,7 +81,7 @@ namespace Simkl.Api
         /// <returns>Serialized response</returns>
         public async Task<Stream> ScrobbleSingleMovieAsync(SimklMovie movie, int progress, string userToken) {
             // TODO: Find a way to check the progress (get settings)
-            return await SyncHistory(new SimklHistory
+            return await SyncHistoryAsync(new SimklHistory
             {
                 movies = new SimklMovie[] { movie }
             }, userToken);
@@ -85,9 +93,9 @@ namespace Simkl.Api
         /// <param name="history">History object</param>
         /// <param name="userToken">User token</param>
         /// <returns></returns>
-        public async Task<Stream> SyncHistory(SimklHistory history, string userToken)
+        public async Task<Stream> SyncHistoryAsync(SimklHistory history, string userToken)
         {
-            return await _post("/sync/history", history, userToken);
+            return await _post("/sync/history", userToken, history);
 
             // using (var r = await _get("/sync/history"))
         }
@@ -114,12 +122,11 @@ namespace Simkl.Api
         /// <param name="data">Object to serialize</param>
         /// <param name="userToken">Authentication token</param>
         /// <returns></returns>
-        private async Task<Stream> _post(string url, object data, string userToken)
+        private async Task<Stream> _post(string url, string userToken = null, object data = null)
         {
-            // TODO: assert data not null
             HttpRequestOptions options = GetOptions(userToken);
             options.Url = BASE_URL + url;
-            options.RequestContent = _json.SerializeToString(data);
+            if (data != null) options.RequestContent = _json.SerializeToString(data);
 
             return (await _httpClient.Post(options).ConfigureAwait(false)).Content;
         }

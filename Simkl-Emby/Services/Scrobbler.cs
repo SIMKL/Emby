@@ -42,10 +42,16 @@ namespace Simkl.Services
             _sessionManager.PlaybackStart -= embyPlaybackStart;
         }
         
-        private async void embyPlaybackProgress(object obj, PlaybackProgressEventArgs e)
+        private async void embyPlaybackProgress(object sessions, PlaybackProgressEventArgs e)
         {
-            _logger.Debug(_json.SerializeToString(obj));
-            _logger.Debug(_json.SerializeToString(e));
+            // _logger.Debug(_json.SerializeToString(sessions));
+            // _logger.Debug(_json.SerializeToString(e));
+            float percentage = (float)(e.PlaybackPositionTicks) / (float)(e.MediaInfo.RunTimeTicks) * 100;
+            _logger.Debug("Percentage watched: " + percentage);
+            if (percentage > Plugin.Instance.PluginConfiguration.scr_pct)
+            {
+                _logger.Debug("Scrobbling because " + percentage + " > " + Plugin.Instance.PluginConfiguration.scr_pct);
+            }
         }
 
         private async void embyPlaybackStart(object obj, PlaybackProgressEventArgs e)

@@ -19,7 +19,11 @@ namespace Simkl
         public override string Name => "Simkl TV Tracker";
         public override Guid Id => new Guid("2ecd91d5-b14b-4b92-8eb9-52c098edfc87");
 
-        public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer) { }
+        public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer) {
+            Instance = this;
+        }
+
+        public static Plugin Instance { get; private set; }
 
         /* IHasWebPages */
 
@@ -32,19 +36,6 @@ namespace Simkl
                 }
             };
 
-        /* IPluginConfigurationPage */
-
-        // string Name implemented w/ BasePlugin implementation
-
-        /*
-
-        public ConfigurationPageType ConfigurationPageType => ConfigurationPageType.PluginConfiguration;
-        public IPlugin Plugin => new IPlugin;
-
-        public Stream GetHtmlStream()
-        {
-            return Assembly.Load(new AssemblyName()).GetManifestResourceStream("Simkl.Configuration.configPage.html");
-        }
-        */
+        public PluginConfiguration PluginConfiguration => Configuration;
     }
 }

@@ -11,7 +11,7 @@ using MediaBrowser.Model.Serialization;
 
 using Simkl.Api.Objects;
 using Simkl.Api.Responses;
-
+using MediaBrowser.Model.Dto;
 
 namespace Simkl.Api
 {
@@ -23,8 +23,8 @@ namespace Simkl.Api
         private readonly IHttpClient _httpClient;
 
         /* BASIC API THINGS */
-        // public const string BASE_URL = @"https://api.simkl.com";
-        public const string BASE_URL = @"http://private-9c39b-simkl.apiary-proxy.com";
+        public const string BASE_URL = @"https://api.simkl.com";
+        // public const string BASE_URL = @"http://private-9c39b-simkl.apiary-proxy.com";
 
         public const string REDIRECT_URI = @"https://ddavo.me/redirected?from=EmbySimkl";
         public const string APIKEY = @"27dd5d6adc24aa1ad9f95ef913244cbaf6df5696036af577ed41670473dc97d0";
@@ -75,21 +75,22 @@ namespace Simkl.Api
             return _json.DeserializeFromStream<UserSettings>(await _post(uri, user_code));
         }
 
-
-        // It should return the unserialized response (string)
-        // TODO: Return serialized response
-        /// <summary>
-        /// Scrobbles a single movie
-        /// </summary>
-        /// <param name="movie">The movie object to scrobble</param>
-        /// <param name="progress">Progress</param>
-        /// <returns>Serialized response</returns>
-        public async Task<Stream> ScrobbleSingleMovieAsync(SimklMovie movie, int progress, string userToken) {
-            // TODO: Find a way to check the progress (get settings)
-            return await SyncHistoryAsync(new SimklHistory
+        /* NOW EVERYTHING RELATED TO SCROBBLING */
+        public async void markAsWatched(BaseItemDto MediaInfo, string userToken)
+        {
+            SimklHistory history = new SimklHistory();
+            _logger.Info("Scrobbling mediainfo: " + _json.SerializeToString(MediaInfo));
+            if (MediaInfo.IsMovie == true || MediaInfo.Type == "Movie")
             {
-                movies = new SimklMovie[] { movie }
-            }, userToken);
+                _logger.Debug("Mediainfo is movie");
+                history.movies.Add(new SimklMovie(MediaInfo));
+            } else
+            {
+                throw new NotImplementedException("Only working for movies");
+            }
+
+            _logger.Info("Scrobbling " + _json.SerializeToString(history));
+            await SyncHistoryAsync(history, userToken);
         }
 
         /// <summary>

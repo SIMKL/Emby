@@ -54,7 +54,7 @@ namespace Simkl.Api
 
         public UserSettings Post(GetUserSettings request)
         {
-            return _api.getUserSettings("fb7a0d9994662121be2c646c287704e41aa8689733b30c74390b69de1931d912").Result;
+            return _api.getUserSettings(request.client_id).Result;
         }
     }
 }

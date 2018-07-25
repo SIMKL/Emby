@@ -10,6 +10,7 @@ using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Model.Dto;
 
 namespace Simkl.Services
 {
@@ -19,6 +20,8 @@ namespace Simkl.Services
         private readonly ILogger _logger;
         private readonly IJsonSerializer _json;
         private SimklApi _api;
+        private DateTime nextScrobble;
+        private string lastScrobbled;   // Library ID of last scrobbled item
 
         // public static Scrobbler Instance; Instance = this
         public Scrobbler(IJsonSerializer json, ISessionManager sessionManager, ILogManager logManager, IHttpClient httpClient)
@@ -27,6 +30,7 @@ namespace Simkl.Services
             _sessionManager = sessionManager;
             _logger = logManager.GetLogger("Simkl Scrobbler");
             _api = new SimklApi(json, _logger, httpClient);
+            nextScrobble = DateTime.Now;
         }
 
         public void Run()
@@ -41,16 +45,38 @@ namespace Simkl.Services
             _sessionManager.PlaybackProgress -= embyPlaybackProgress;
             _sessionManager.PlaybackStart -= embyPlaybackStart;
         }
+
+        public bool canBeScrobbled(long? playBackPositionTicks, long? runTimeTicks)
+        {
+            // Note: 1 tick = 0.1 ms, 1 min = 60 * 1000 * 10 tick
+            float percentageWatched = (float)playBackPositionTicks / (float)(runTimeTicks) * 100;
+            bool greaterThanMinLength = runTimeTicks > 60 * 10000 * Plugin.Instance.PluginConfiguration.min_length;
+            return percentageWatched > Plugin.Instance.PluginConfiguration.scr_pct && greaterThanMinLength;
+        }
         
         private async void embyPlaybackProgress(object sessions, PlaybackProgressEventArgs e)
         {
             // _logger.Debug(_json.SerializeToString(sessions));
             // _logger.Debug(_json.SerializeToString(e));
-            float percentage = (float)(e.PlaybackPositionTicks) / (float)(e.MediaInfo.RunTimeTicks) * 100;
-            _logger.Debug("Percentage watched: " + percentage);
-            if (percentage > Plugin.Instance.PluginConfiguration.scr_pct)
+            bool v = lastScrobbled != e.MediaSourceId;
+            _logger.Debug("Current time: " + DateTime.Now + ", next scrobble: " + nextScrobble + ", notScrobbled: " + v);
+            if (v && canBeScrobbled(e.PlaybackPositionTicks, e.MediaInfo.RunTimeTicks) && DateTime.Now > nextScrobble)
             {
-                _logger.Debug("Scrobbling because " + percentage + " > " + Plugin.Instance.PluginConfiguration.scr_pct);
+                nextScrobble = DateTime.Now.AddSeconds(Plugin.Instance.PluginConfiguration.scrobbleTimeout);
+                lastScrobbled = e.MediaSourceId;
+                _logger.Debug("Scrobbling");
+                try
+                {
+                    _api.markAsWatched(e.MediaInfo, Plugin.Instance.PluginConfiguration.userToken);
+                }
+                catch (NotImplementedException)
+                {
+                    _logger.Warn("That wasn't a movie");
+                }
+                catch
+                {
+                    throw;
+                }
             }
         }
 

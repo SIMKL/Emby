@@ -83,11 +83,15 @@ namespace Simkl.Api
             _logger.Info("Scrobbling mediainfo: " + _json.SerializeToString(MediaInfo));
             if (MediaInfo.IsMovie == true || MediaInfo.Type == "Movie")
             {
-                _logger.Debug("Mediainfo is movie");
                 history.movies.Add(new SimklMovie(MediaInfo));
-            } else
+            }
+            else if (MediaInfo.IsSeries == true || MediaInfo.Type == "Episode")
             {
-                throw new NotImplementedException("Only working for movies");
+                // TODO: TV Shows scrobbling (WIP)
+            }
+            else
+            {
+                throw new NotImplementedException("Method not implemented for MediaInfo type " + MediaInfo.Type);
             }
 
             _logger.Info("Scrobbling " + _json.SerializeToString(history));

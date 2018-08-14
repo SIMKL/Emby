@@ -8,6 +8,7 @@
   
   <ItemGroup>
 	<PackageReference Include="mediabrowser.server.core" Version="3.3.38" />
+	<PackageReference Include="System.Reflection.TypeExtensions" Version="4.5.0" />
   </ItemGroup>
   
   <ItemGroup>

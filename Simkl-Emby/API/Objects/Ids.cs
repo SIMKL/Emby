@@ -1,4 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using MediaBrowser.Model.Logging;
+using MediaBrowser.Model.Serialization;
+using System;
+using System.Collections.Generic;
+using System.Reflection;
 
 namespace Simkl.Api.Objects
 {
@@ -18,8 +22,17 @@ namespace Simkl.Api.Objects
         /// </summary>
         public Ids (Dictionary<string, string> ProviderIds)
         {
-            imdb = ProviderIds["Imdb"];
-            tmdb = int.Parse(ProviderIds["Tmdb"]);
+            foreach (KeyValuePair<string, string> id in ProviderIds)
+            {
+                PropertyInfo prop = GetType().GetProperty(id.Key.ToLower());
+                if (prop.PropertyType == typeof(int?))
+                {
+                    prop.SetValue(this, int.Parse(id.Value));
+                } else if (prop.PropertyType == typeof(string))
+                {
+                    prop.SetValue(this, id.Value);
+                }
+            }
         }
     }
 }

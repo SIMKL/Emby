@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 
 using MediaBrowser.Model.Logging;
+using MediaBrowser.Model.Serialization;
 using MediaBrowser.Model.Services;
 
 using Simkl.Api.Objects;
@@ -26,15 +27,16 @@ namespace Simkl.Api
     [Route("/Simkl/users/settings", "POST")]
     public class GetUserSettings : IReturn<UserSettings>
     {
-        [ApiMember(Name = "client_id", Description = "client 'password'", IsRequired = true, DataType = "string", ParameterType = "query", Verb = "POST")]
-        public string client_id { get; set; }
+        // Note: In the future, when we'll have config for more than one user, we'll use a parameter
+        // [ApiMember(Name = "client_id", Description = "client 'password'", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "POST")]
+        // public string client_id { get; set; }
     }
 
     class ServerEndpoint : IService
     {
         private readonly SimklApi _api;
         private readonly ILogger _logger;
-        // json?
+        private readonly IJsonSerializer _json;
 
         public ServerEndpoint(SimklApi api, ILogger logger)
         {
@@ -54,7 +56,7 @@ namespace Simkl.Api
 
         public UserSettings Post(GetUserSettings request)
         {
-            return _api.getUserSettings(request.client_id).Result;
+            return _api.getUserSettings().Result;
         }
     }
 }

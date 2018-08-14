@@ -132,10 +132,8 @@
                 getUserSettings: function () {
                     var uri = "/Simkl/users/settings";
                     var r = new XMLHttpRequest();
-                    console.log("POSTING: " + uri);
-                    r.open("POST", uri, false);
-
-                    r.send(this.user_code);
+                    r.open("GET", uri, false);
+                    r.send();
 
                     if (r.status == 200) {
                         return JSON.parse(r.response);

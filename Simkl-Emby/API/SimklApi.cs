@@ -45,7 +45,7 @@ namespace Simkl.Api
             options.RequestHeaders.Add("simkl-api-key", APIKEY);
             // options.RequestHeaders.Add("Content-Type", "application/json");
             if ( !string.IsNullOrEmpty(userToken) )
-                options.RequestHeaders.Add("authorization", "Bearer " + userToken);
+                options.RequestHeaders.Add("Authorization", "Bearer " + userToken);
 
             return options;
         }
@@ -69,9 +69,10 @@ namespace Simkl.Api
             return _json.DeserializeFromStream<CodeStatusResponse>(await _get(uri));
         }
 
-        public async Task<UserSettings> getUserSettings(string user_code)
+        public async Task<UserSettings> getUserSettings()
         {
             string uri = String.Format("/users/settings");
+            string user_code = Plugin.Instance.Configuration.userToken;
             return _json.DeserializeFromStream<UserSettings>(await _post(uri, user_code));
         }
 

@@ -24,7 +24,7 @@ namespace Simkl.Api
         public string user_code { get; set; }
     }
 
-    [Route("/Simkl/users/settings", "POST")]
+    [Route("/Simkl/users/settings", "GET")]
     public class GetUserSettings : IReturn<UserSettings>
     {
         // Note: In the future, when we'll have config for more than one user, we'll use a parameter
@@ -54,7 +54,7 @@ namespace Simkl.Api
             return _api.getCodeStatus(request.user_code).Result;
         }
 
-        public UserSettings Post(GetUserSettings request)
+        public UserSettings Get(GetUserSettings request)
         {
             return _api.getUserSettings().Result;
         }

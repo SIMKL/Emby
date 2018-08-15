@@ -88,6 +88,7 @@ namespace Simkl.Api
             else if (MediaInfo.IsSeries == true || MediaInfo.Type == "Episode")
             {
                 // TODO: TV Shows scrobbling (WIP)
+                history.shows.Add(SimklShow.createFromEpisode(MediaInfo));
             }
             else
             {

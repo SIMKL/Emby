@@ -17,6 +17,8 @@ namespace Simkl
         // public override string Name { get { return "Simkl TV Tracker"; } }
         // https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/operators/lambda-operator#expression-body-definition
         public override string Name => "Simkl TV Tracker";
+        public override string Description => "Scrobble your watched Movies, TV Shows and Anime to Simkl and share your progress with friends!";
+
         public override Guid Id => new Guid("2ecd91d5-b14b-4b92-8eb9-52c098edfc87");
 
         public Plugin(IApplicationPaths applicationPaths, IXmlSerializer xmlSerializer) : base(applicationPaths, xmlSerializer) {

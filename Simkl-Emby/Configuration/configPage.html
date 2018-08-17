@@ -4,59 +4,140 @@
     <title>Simkl</title>
 </head>
 <body>
-    <div data-role="page" class="page type-interior pluginConfigurationPage" id="SimklConfigurationPage" data-require="emby-button,emby-checkbox,emby-input">
+    <div data-role="page" class="page type-interior pluginConfigurationPage" id="SimklConfigurationPage" data-require="emby-button,emby-checkbox,emby-input,emby-select">
         <div data-role="content">
             <div class="content-primary">
+                <h1>Simkl's TV Tracker</h1>
                 <form id="SimklConfigurationForm">
-                    <h1>Log In</h1>
+                    <div class="selectContainer">
+                        <select is="emby-select" id="embyUser" onchange="SimklConfig.load(this.value);" label="Showing plugin Settings for:">
+                            <!--<option value="">Select user</option>-->
+                        </select>
+                    </div>
                     <div id="notLoggedIn" hidden>
-                        <h2 id="loginMsg">You are not logged in</h2>
+                        <h2>Log In</h2>
+                        <h3 id="loginMsg">You are not logged in</h3>
                         <!-- TODO: Style this -->
                     </div>
                     <div id="loggedIn" hidden>
+                        <h2>Log In</h2>
                         <button id="logOutButton" is="emby-button" type="button" class="raised block" onclick="SimklAPI.logOut();"><span>Log Out</span></button>
                     </div>
-                    <h1>Scrobbling Options</h1>
-                    <div class="checkboxContainer">
-                        <label>
-                            <input is="emby-checkbox" type="checkbox" id="autoscrobble" />
-                            <span>Enable autoscrobbling</span>
-                        </label>
-                    </div>
-
-                    <div class="checkboxContainer">
-                        <label>
-                            <input is="emby-checkbox" type="checkbox" id="bubble" />
-                            <span>Show bubble while scrobbling</span>
-                        </label>
-                    </div>
-
-                    <div class="inputContainer">
-                        <input is="emby-input" id="scr_pct" type="number" min="0" max="100" pattern="[0-9]*" label="Scrobbling percentage:" />
-                        <div class="fieldDescription">
-                            Percentage watched needed to scrobble
+                    <div id="scrobblingOptions" hidden>
+                        <h2>Scrobbling Options</h2>
+                        <div class="checkboxContainer">
+                            <label>
+                                <input is="emby-checkbox" type="checkbox" id="autoscrobble" />
+                                <span>Enable autoscrobbling</span>
+                            </label>
                         </div>
-                    </div>
 
-                    <div class="inputContainer">
-                        <input is="emby-input" id="min_length" type="number" min="0" max="60" pattern="[0-9]*" label="Min length:" />
-                        <div class="fieldDescription">
-                            Length needed (in minutes) for a clip to be scrobbled. This way, short videos and trailers won't be scrobbled
+                        <div class="checkboxContainer">
+                            <label>
+                                <input is="emby-checkbox" type="checkbox" id="bubble" />
+                                <span>Show bubble while scrobbling</span>
+                            </label>
                         </div>
+
+                        <div class="inputContainer">
+                            <input is="emby-input" id="scr_pct" type="number" min="0" max="100" pattern="[0-9]*" label="Scrobbling percentage:" />
+                            <div class="fieldDescription">
+                                Percentage watched needed to scrobble
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <input is="emby-input" id="min_length" type="number" min="0" max="60" pattern="[0-9]*" label="Min length:" />
+                            <div class="fieldDescription">
+                                Length needed (in minutes) for a clip to be scrobbled. This way, short videos and trailers won't be scrobbled
+                            </div>
+                        </div>
+                        <br />
+                        <br />
+                        <button is="emby-button" type="submit" class="raised button-submit block"><span>${ButtonSave}</span></button>
+                        <button is="emby-button" type="button" onclick="history.back();" class="raised block"><span>${ButtonCancel}</span></button>
                     </div>
-                    <br />
-                    <br />
-                    <button is="emby-button" type="submit" class="raised button-submit block"><span>${ButtonSave}</span></button>
-                    <button is="emby-button" type="button" onclick="history.back();" class="raised block"><span>${ButtonCancel}</span></button>
                 </form>
             </div>
         </div>
         <script type="text/javascript">
             var guid = "2ecd91d5-b14b-4b92-8eb9-52c098edfc87";
+            var SimklConfig = {
+                searchByGuid: function (userConfigs, userid) {
+                    var index = -1;
+                    for (var i = 0; index == -1 && i < userConfigs.length; i++) {
+                        if (userConfigs[i].id == userid) index = i;
+                    }
+                    return index;
+                },
+                load: function (userId, page) {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(guid).then(SimklConfig.show);
+                },
+                showLogIn: function (userConfig) {
+                    SimklAPI.logIn("#notLoggedIn");
+                    $("#notLoggedIn").show();
+                },
+                showLoggedIn: function (userConfig) {
+                    $("#loggedIn").show();
+                    $("#scrobblingOptions").show();
+                },
+                show: function (config) {
+                    var userId = $("#embyUser").val();
+                    var i = SimklConfig.searchByGuid(config.UserConfigs, userId);
+                    var userConfig = config.UserConfigs[i];
+
+                    console.log(i);
+                    console.log(config);
+                    console.log(userId);
+                    console.log(userConfig);
+
+                    if (i == -1) {
+                        console.log("No config for " + userId + ", creating one");
+                        config.UserConfigs[config.UserConfigs.length] = {id:userId};
+                        ApiClient.updatePluginConfiguration(guid, config);
+                        ApiClient.getPluginConfiguration(guid).then(SimklConfig.show);
+                    } else {
+                        if (userConfig.userToken == "" || userConfig.userToken == null) {
+                            SimklConfig.showLogIn(userConfig);
+                        } else {
+                            SimklConfig.showLoggedIn(userConfig);
+                        }
+                    }
+
+                    /*
+                    $("#scr_pct").val(config.scr_pct);
+                    $("#min_length").val(config.min_length);
+
+                    $("#autoscrobble").checked(config.autoscrobble);
+                    $("#bubble").checked(config.bubble);
+
+                    if (config.userToken != "" && config.userToken != null) {
+                        console.log("User is logged in with token " + config.userToken);
+                        SimklAPI.user_code = config.userToken;
+                        var config = SimklAPI.getUserSettings();
+                        $("#logOutButton").before("Hello again " + config.user.name + "!");
+                        $("#loggedIn").show();
+                    } else {
+                        console.log("User is not logged in, showing pin and all the things");
+                        SimklAPI.logIn("#notLoggedIn");
+                        $("#notLoggedIn").show();
+                    }
+                    */
+
+                    Dashboard.hideLoadingMsg();
+                },
+                populateSelector: async function (users) {
+                    users.forEach(function (user) {
+                        $("#embyUser").append("<option value='" + user.Id + "'>" + user.Name + "</option>");
+                    });
+                }
+            }
 
             var SimklAPI = {
                 auth_pending:false,
-                user_code:"",
+                user_code: "",
+                embyUserId: "",
                 interval: 5,
                 timeout: 500,
                 access_token: "",
@@ -104,12 +185,11 @@
                 },
                 setCodeInConfig: function () {
                     ApiClient.getPluginConfiguration(guid).then(function (config) {
-                        config.userToken = SimklAPI.access_token;
+                        config.UserConfigs[SimklConfig.searchByGuid($("#embyUser").val())].userToken = SimklAPI.access_token;
 
                         console.log("Saving access token in settings");
-                        ApiClient.updatePluginConfiguration(guid, config).finally(function () {
-                            window.location.reload();
-                        });
+                        console.log(config);
+                        ApiClient.updatePluginConfiguration(guid, config);
                     });
                 },
                 logIn: async function (div_id) {
@@ -143,28 +223,8 @@
 
             $("#SimklConfigurationPage").on("pageshow", function (e) {
                 Dashboard.showLoadingMsg();
-                ApiClient.getPluginConfiguration(guid).then(function (config) {
-                    $("#scr_pct").val(config.scr_pct);
-                    $("#min_length").val(config.min_length);
-
-                    $("#autoscrobble").checked(config.autoscrobble);
-                    $("#bubble").checked(config.bubble);
-
-                    if (config.userToken != "" && config.userToken != null) {
-                        console.log("User is logged in with token " + config.userToken);
-                        SimklAPI.user_code = config.userToken;
-                        // username = SimklAPI.getUsername();
-                        var config = SimklAPI.getUserSettings();
-                        $("#logOutButton").before("Hello again " + config.user.name + "!");
-                        $("#loggedIn").show();
-                    } else {
-                        console.log("User is not logged in, showing pin and all the things");
-                        SimklAPI.logIn("#notLoggedIn");
-                        $("#notLoggedIn").show();
-                    }
-
-                    Dashboard.hideLoadingMsg();
-                });
+                ApiClient.getUsers().then(SimklConfig.populateSelector);
+                ApiClient.getPluginConfiguration(guid).then(SimklConfig.show);
             });
 
             $("#SimklConfigurationPage").on("submit", function (e) {

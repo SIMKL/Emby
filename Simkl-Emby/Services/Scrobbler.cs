@@ -10,7 +10,7 @@ using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Library;
-using MediaBrowser.Model.Dto;
+using Simkl.Configuration;
 
 namespace Simkl.Services
 {
@@ -46,12 +46,12 @@ namespace Simkl.Services
             _sessionManager.PlaybackStart -= embyPlaybackStart;
         }
 
-        public bool canBeScrobbled(long? playBackPositionTicks, long? runTimeTicks)
+        public bool canBeScrobbled(long? playBackPositionTicks, long? runTimeTicks, int min_length, int scr_pct)
         {
             // Note: 1 tick = 0.1 ms, 1 min = 60 * 1000 * 10 tick
             float percentageWatched = (float)playBackPositionTicks / (float)(runTimeTicks) * 100;
-            bool greaterThanMinLength = runTimeTicks > 60 * 10000 * Plugin.Instance.PluginConfiguration.min_length;
-            return percentageWatched > Plugin.Instance.PluginConfiguration.scr_pct && greaterThanMinLength;
+            bool greaterThanMinLength = runTimeTicks > 60 * 10000 * min_length;
+            return percentageWatched > scr_pct && greaterThanMinLength && DateTime.Now > nextScrobble;
         }
         
         private async void embyPlaybackProgress(object sessions, PlaybackProgressEventArgs e)
@@ -60,23 +60,13 @@ namespace Simkl.Services
             // _logger.Debug(_json.SerializeToString(e));
             bool v = lastScrobbled != e.MediaSourceId;
             _logger.Debug("Current time: " + DateTime.Now + ", next scrobble: " + nextScrobble + ", notScrobbled: " + v);
-            if (v && canBeScrobbled(e.PlaybackPositionTicks, e.MediaInfo.RunTimeTicks) && DateTime.Now > nextScrobble)
+            _logger.Debug("PlaybackProgressEventArgs: " + _json.SerializeToString(e));
+            UserConfig userConfig = Plugin.Instance.PluginConfiguration.getByGuid(e.Session.UserId ?? default(Guid));
+            if (v && canBeScrobbled(e.PlaybackPositionTicks, e.MediaInfo.RunTimeTicks, userConfig.min_length, userConfig.scr_pct))
             {
-                nextScrobble = DateTime.Now.AddSeconds(Plugin.Instance.PluginConfiguration.scrobbleTimeout);
+                nextScrobble = DateTime.Now.AddSeconds(userConfig.scrobbleTimeout);
                 lastScrobbled = e.MediaSourceId;
-                _logger.Debug("Scrobbling");
-                try
-                {
-                    _api.markAsWatched(e.MediaInfo, Plugin.Instance.PluginConfiguration.userToken);
-                }
-                catch (NotImplementedException)
-                {
-                    _logger.Warn("That wasn't a movie");
-                }
-                catch
-                {
-                    throw;
-                }
+                _api.markAsWatched(e.MediaInfo, userConfig.userToken);
             }
         }
 

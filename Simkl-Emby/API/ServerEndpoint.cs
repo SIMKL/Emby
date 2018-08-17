@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
@@ -28,8 +26,8 @@ namespace Simkl.Api
     public class GetUserSettings : IReturn<UserSettings>
     {
         // Note: In the future, when we'll have config for more than one user, we'll use a parameter
-        // [ApiMember(Name = "client_id", Description = "client 'password'", IsRequired = true, DataType = "string", ParameterType = "path", Verb = "POST")]
-        // public string client_id { get; set; }
+        [ApiMember(Name = "client_id", Description = "client 'password'", IsRequired = true, DataType = "Guid", ParameterType = "path", Verb = "POST")]
+        public Guid userId { get; set; }
     }
 
     class ServerEndpoint : IService
@@ -56,7 +54,7 @@ namespace Simkl.Api
 
         public UserSettings Get(GetUserSettings request)
         {
-            return _api.getUserSettings().Result;
+            return _api.getUserSettings(request.userId).Result;
         }
     }
 }

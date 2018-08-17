@@ -69,11 +69,11 @@ namespace Simkl.Api
             return _json.DeserializeFromStream<CodeStatusResponse>(await _get(uri));
         }
 
-        public async Task<UserSettings> getUserSettings()
+        public async Task<UserSettings> getUserSettings(Guid user_id)
         {
             string uri = String.Format("/users/settings");
-            string user_code = Plugin.Instance.Configuration.userToken;
-            return _json.DeserializeFromStream<UserSettings>(await _post(uri, user_code));
+            string userToken = Plugin.Instance.Configuration.getByGuid(user_id).userToken;
+            return _json.DeserializeFromStream<UserSettings>(await _post(uri, userToken));
         }
 
         /* NOW EVERYTHING RELATED TO SCROBBLING */

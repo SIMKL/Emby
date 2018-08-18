@@ -73,6 +73,7 @@ namespace Simkl.Api
         {
             string uri = String.Format("/users/settings");
             string userToken = Plugin.Instance.Configuration.getByGuid(user_id).userToken;
+            _logger.Debug("User_id: " + user_id.ToString() + ", userToken: " + userToken);
             return _json.DeserializeFromStream<UserSettings>(await _post(uri, userToken));
         }
 

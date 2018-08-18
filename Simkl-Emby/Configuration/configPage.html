@@ -18,9 +18,11 @@
                         <h2>Log In</h2>
                         <h3 id="loginMsg">You are not logged in</h3>
                         <!-- TODO: Style this -->
+                        <div></div>
                     </div>
                     <div id="loggedIn" hidden>
                         <h2>Log In</h2>
+                        <div></div>
                         <button id="logOutButton" is="emby-button" type="button" class="raised block" onclick="SimklAPI.logOut();"><span>Log Out</span></button>
                     </div>
                     <div id="scrobblingOptions" hidden>
@@ -64,14 +66,14 @@
             var guid = "2ecd91d5-b14b-4b92-8eb9-52c098edfc87";
             var SimklConfig = {
                 searchByGuid: function (userConfigs, userid) {
-                    var index = -1;
-                    for (var i = 0; index == -1 && i < userConfigs.length; i++) {
-                        if (userConfigs[i].id == userid) index = i;
+                    for (var i = 0; i < userConfigs.length; i++) {
+                        if (userConfigs[i].id == userid) return i;
                     }
-                    return index;
+                    return -1;
                 },
                 load: function (userId, page) {
                     Dashboard.showLoadingMsg();
+                    SimklConfig.hide();
                     ApiClient.getPluginConfiguration(guid).then(SimklConfig.show);
                 },
                 showLogIn: function (userConfig) {
@@ -79,8 +81,21 @@
                     $("#notLoggedIn").show();
                 },
                 showLoggedIn: function (userConfig) {
+                    $("#scr_pct").val(userConfig.scr_pct);
+                    $("#min_length").val(userConfig.min_length);
+
+                    $("#autoscrobble").checked(userConfig.autoscrobble);
+                    $("#bubble").checked(userConfig.bubble);
+                    $("#loggedIn div").html("Hello again " + SimklAPI.getUserSettings($("#embyUser").val()).user.name + "!");
+
                     $("#loggedIn").show();
                     $("#scrobblingOptions").show();
+                },
+                hide: function () {
+                    SimklAPI.auth_pending = false;
+                    $("#notLoggedIn").hide();
+                    $("#loggedIn").hide();
+                    $("#scrobblingOptions").hide();
                 },
                 show: function (config) {
                     var userId = $("#embyUser").val();
@@ -104,26 +119,6 @@
                             SimklConfig.showLoggedIn(userConfig);
                         }
                     }
-
-                    /*
-                    $("#scr_pct").val(config.scr_pct);
-                    $("#min_length").val(config.min_length);
-
-                    $("#autoscrobble").checked(config.autoscrobble);
-                    $("#bubble").checked(config.bubble);
-
-                    if (config.userToken != "" && config.userToken != null) {
-                        console.log("User is logged in with token " + config.userToken);
-                        SimklAPI.user_code = config.userToken;
-                        var config = SimklAPI.getUserSettings();
-                        $("#logOutButton").before("Hello again " + config.user.name + "!");
-                        $("#loggedIn").show();
-                    } else {
-                        console.log("User is not logged in, showing pin and all the things");
-                        SimklAPI.logIn("#notLoggedIn");
-                        $("#notLoggedIn").show();
-                    }
-                    */
 
                     Dashboard.hideLoadingMsg();
                 },
@@ -185,11 +180,12 @@
                 },
                 setCodeInConfig: function () {
                     ApiClient.getPluginConfiguration(guid).then(function (config) {
-                        config.UserConfigs[SimklConfig.searchByGuid($("#embyUser").val())].userToken = SimklAPI.access_token;
+                        config.UserConfigs[SimklConfig.searchByGuid(config.UserConfigs, $("#embyUser").val())].userToken = SimklAPI.access_token;
 
-                        console.log("Saving access token in settings");
+                        console.log("Saving access token in settings: " + SimklConfig.searchByGuid($("#embyUser").val()));
                         console.log(config);
-                        ApiClient.updatePluginConfiguration(guid, config);
+                        console.log(SimklAPI);
+                        ApiClient.updatePluginConfiguration(guid, config).then(SimklConfig.load);
                     });
                 },
                 logIn: async function (div_id) {
@@ -198,9 +194,9 @@
                     this.finish.setSeconds(this.finish.getSeconds() + this.timeout - 5 * this.interval)
 
                     // $(div_id).html(this.user_code);
-                    $("#loginMsg").after("Please visit <a href='" + this.verification_url + "/" + this.user_code
+                    $(div_id + " div").html("Please visit <a href='" + this.verification_url + "/" + this.user_code
                         + "' target='_blank'>" + this.verification_url + "</a> on your phone or computer and enter the following code:");
-                    $(div_id).append('<h3 id="loginPin">' + this.user_code + '</h3>');
+                    $(div_id + " div").append('<h3 id="loginPin">' + this.user_code + '</h3>');
                     console.log("this: " + JSON.stringify(this));
                     this.chkCodeInterval = setInterval(this.checkCodeStatus, this.interval * 1000, this);
                     // Todo: Don't check if window is not focused
@@ -209,8 +205,8 @@
                     this.user_code = "";
                     await this.setCodeInConfig();
                 },
-                getUserSettings: function () {
-                    var uri = "/Simkl/users/settings";
+                getUserSettings: function (guid) {
+                    var uri = "/Simkl/users/settings/" + guid;
                     var r = new XMLHttpRequest();
                     r.open("GET", uri, false);
                     r.send();
@@ -231,9 +227,12 @@
                 Dashboard.showLoadingMsg();
 
                 ApiClient.getPluginConfiguration(guid).then(function (config) {
-                    config.scr_pct = $("#scr_pct").val();
-                    config.min_length = $("#min_length").val();
+                    var configUser = config.UserConfigs[SimklConfig.searchByGuid($("#embyUser").val())];
+                    configUser.scr_pct = $("#scr_pct").val();
+                    configUser.min_length = $("#min_length").val();
 
+                    console.log("Saving settings:");
+                    console.log(config);
                     ApiClient.updatePluginConfiguration(guid, config).then(Dashboard.processPluginConfigurationUpdateResult);
                     Dashboard.hideLoadingMsg();
                 });

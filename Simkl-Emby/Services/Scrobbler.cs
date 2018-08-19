@@ -61,7 +61,13 @@ namespace Simkl.Services
             bool v = lastScrobbled != e.MediaSourceId;
             _logger.Debug("Current time: " + DateTime.Now + ", next scrobble: " + nextScrobble + ", notScrobbled: " + v);
             _logger.Debug("PlaybackProgressEventArgs: " + _json.SerializeToString(e));
-            UserConfig userConfig = Plugin.Instance.PluginConfiguration.getByGuid(e.Session.UserId ?? default(Guid));
+            _logger.Debug(e.Session.UserId.ToString());
+            UserConfig userConfig = Plugin.Instance.PluginConfiguration.getByGuid(e.Session.UserId);
+            if (userConfig.userToken == "")
+            {
+                _logger.Info("Can't scrobble: User " + e.Session.UserName + " not logged in");
+                v = false;
+            }
             if (v && canBeScrobbled(e.PlaybackPositionTicks, e.MediaInfo.RunTimeTicks, userConfig.min_length, userConfig.scr_pct))
             {
                 nextScrobble = DateTime.Now.AddSeconds(userConfig.scrobbleTimeout);

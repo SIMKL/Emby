@@ -227,7 +227,7 @@
                 Dashboard.showLoadingMsg();
 
                 ApiClient.getPluginConfiguration(guid).then(function (config) {
-                    var configUser = config.UserConfigs[SimklConfig.searchByGuid($("#embyUser").val())];
+                    var configUser = config.UserConfigs[SimklConfig.searchByGuid(config.UserConfigs, $("#embyUser").val())];
                     configUser.scr_pct = $("#scr_pct").val();
                     configUser.min_length = $("#min_length").val();
 

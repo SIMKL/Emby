@@ -1,5 +1,5 @@
 ﻿using System;
-
+using MediaBrowser.Controller.Net;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Model.Services;
@@ -30,8 +30,11 @@ namespace Simkl.Api
         public Guid userId { get; set; }
     }
 
-    class ServerEndpoint : IService
+    class ServerEndpoint : IService, IHasResultFactory
     {
+        public IHttpResultFactory ResultFactory { get; set; }
+        public IRequest Request { get; set; }
+
         private readonly SimklApi _api;
         private readonly ILogger _logger;
         private readonly IJsonSerializer _json;
@@ -56,7 +59,13 @@ namespace Simkl.Api
         public UserSettings Get(GetUserSettings request)
         {
             _logger.Debug(_json.SerializeToString(request));
-            return _api.getUserSettings(request.userId).Result;
+            try
+            {
+                return _api.getUserSettings(request.userId).Result;
+            } catch (MediaBrowser.Model.Net.HttpException e) when (e.StatusCode == System.Net.HttpStatusCode.Unauthorized) {
+                // TODO: HTTP Response status codes
+                return new UserSettings() { };
+            }
         }
     }
 }

@@ -46,7 +46,7 @@ namespace Simkl.Services
             _sessionManager.PlaybackStart -= embyPlaybackStart;
         }
 
-        public bool canBeScrobbled(long? playBackPositionTicks, long? runTimeTicks, int min_length, int scr_pct)
+        private bool canBeScrobbled(long? playBackPositionTicks, long? runTimeTicks, int min_length, int scr_pct)
         {
             // Note: 1 tick = 0.1 ms, 1 min = 60 * 1000 * 10 tick
             float percentageWatched = (float)playBackPositionTicks / (float)(runTimeTicks) * 100;

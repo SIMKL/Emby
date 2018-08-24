@@ -81,15 +81,20 @@
                     $("#notLoggedIn").show();
                 },
                 showLoggedIn: function (userConfig) {
-                    $("#scr_pct").val(userConfig.scr_pct);
-                    $("#min_length").val(userConfig.min_length);
+                    var userSettings = SimklAPI.getUserSettings($("#embyUser").val());
+                    if (userSettings.error == "user_token_failed") {
+                        SimklConfig.showLogIn(userConfig);
+                    } else {
+                        $("#scr_pct").val(userConfig.scr_pct);
+                        $("#min_length").val(userConfig.min_length);
 
-                    $("#autoscrobble").checked(userConfig.autoscrobble);
-                    $("#bubble").checked(userConfig.bubble);
-                    $("#loggedIn div").html("Hello again " + SimklAPI.getUserSettings($("#embyUser").val()).user.name + "!");
+                        $("#autoscrobble").checked(userConfig.autoscrobble);
+                        $("#bubble").checked(userConfig.bubble);
+                        $("#loggedIn div").html("Hello again " + userSettings.user.name + "!");
 
-                    $("#loggedIn").show();
-                    $("#scrobblingOptions").show();
+                        $("#loggedIn").show();
+                        $("#scrobblingOptions").show();
+                    }
                 },
                 hide: function () {
                     SimklAPI.auth_pending = false;

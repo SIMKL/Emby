@@ -8,7 +8,7 @@ namespace Simkl.Api.Objects
     {
         public User user { get; set; }
         public Account account { get; set; }
-
+        public string error { get; set; }
     }
 
     public class User

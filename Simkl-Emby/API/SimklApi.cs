@@ -69,12 +69,18 @@ namespace Simkl.Api
             return _json.DeserializeFromStream<CodeStatusResponse>(await _get(uri));
         }
 
-        public async Task<UserSettings> getUserSettings(Guid user_id)
+        public async Task<UserSettings> getUserSettings(string userToken)
         {
-            string uri = String.Format("/users/settings");
-            string userToken = Plugin.Instance.Configuration.getByGuid(user_id).userToken;
-            _logger.Debug("User_id: " + user_id.ToString() + ", userToken: " + userToken);
-            return _json.DeserializeFromStream<UserSettings>(await _post(uri, userToken));
+            try { 
+                return _json.DeserializeFromStream<UserSettings>(await _post("/users/settings/", userToken));
+            }
+            catch (MediaBrowser.Model.Net.HttpException e) when(e.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                // Wontfix: Custom status codes
+                // "You don't get to pick your response code" - Luke (System Architect of Emby)
+                // https://emby.media/community/index.php?/topic/61889-wiki-issue-resultfactorythrowerror/
+                return new UserSettings() { error = "user_token_failed" };
+            }
         }
 
         /* NOW EVERYTHING RELATED TO SCROBBLING */
@@ -91,13 +97,16 @@ namespace Simkl.Api
                 // TODO: TV Shows scrobbling (WIP)
                 history.shows.Add(SimklShow.createFromEpisode(MediaInfo));
             }
-            else
-            {
-                throw new NotImplementedException("Method not implemented for MediaInfo type " + MediaInfo.Type);
-            }
-
             _logger.Info("Scrobbling " + _json.SerializeToString(history));
-            await SyncHistoryAsync(history, userToken);
+            try
+            {
+                await SyncHistoryAsync(history, userToken);
+            }
+            catch (MediaBrowser.Model.Net.HttpException e) when (e.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                _logger.Error("Invalid user token " + userToken + ", deleting");
+                Plugin.Instance.Configuration.deleteUserToken(userToken);
+            }
         }
 
         /// <summary>

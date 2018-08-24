@@ -31,5 +31,18 @@ namespace Simkl.Configuration
             int i = searchByGuid(guid);
             return (i == -1)?new UserConfig():UserConfigs[i];
         }
+
+        /// <summary>
+        /// Deletes an invalid or revoked userToken for all accounts that use it
+        /// </summary>
+        /// <param name="userToken">The Simkl's user token</param>
+        public void deleteUserToken(string userToken)
+        {
+            foreach (UserConfig config in UserConfigs)
+            {
+                if (config.userToken == userToken)
+                    config.userToken = "";
+            }
+        }
     }
 }

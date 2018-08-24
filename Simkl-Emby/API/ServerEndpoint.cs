@@ -59,13 +59,7 @@ namespace Simkl.Api
         public UserSettings Get(GetUserSettings request)
         {
             _logger.Debug(_json.SerializeToString(request));
-            try
-            {
-                return _api.getUserSettings(request.userId).Result;
-            } catch (MediaBrowser.Model.Net.HttpException e) when (e.StatusCode == System.Net.HttpStatusCode.Unauthorized) {
-                // TODO: HTTP Response status codes
-                return new UserSettings() { };
-            }
+            return _api.getUserSettings(Plugin.Instance.Configuration.getByGuid(request.userId).userToken).Result;
         }
     }
 }

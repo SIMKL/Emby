@@ -3,7 +3,7 @@
 [![](https://img.shields.io/gitlab/pipeline/daviddavo/simkl-emby.svg?style=flat-square)](https://gitlab.com/daviddavo/simkl-emby/pipelines)
 
 ## TODO:
-- [ ] Auto-build for manual installing
+- [x] Auto-build for manual installing
 - [ ] Auto-release
 
 ## Join the conversation:

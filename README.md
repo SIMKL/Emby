@@ -1,5 +1,6 @@
 # Simkl's Kodi Scrobbler
-[![](https://img.shields.io/badge/licence-%20GPLv3-brightgreen.svg)][license]
+[![](https://img.shields.io/github/license/SIMKL/emby.svg?style=flat-square)][license]
+[![](https://img.shields.io/gitlab/pipeline/daviddavo/simkl-emby.svg?style=flat-square)](https://gitlab.com/daviddavo/simkl-emby/pipelines)
 
 ## TODO:
 - [ ] Auto-build for manual installing

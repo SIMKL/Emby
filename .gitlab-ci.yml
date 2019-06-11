@@ -1,0 +1,9 @@
+stages:
+  - build
+
+build:
+  image: microsoft/dotnet
+  stage: build
+  script:
+    - cd Simkl-Emby
+    - dotnet build -p:PostBuildEvents=

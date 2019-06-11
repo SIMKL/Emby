@@ -54,7 +54,7 @@ namespace Simkl.Services
             return percentageWatched > scr_pct && greaterThanMinLength && DateTime.Now > nextScrobble;
         }
         
-        private async void embyPlaybackProgress(object sessions, PlaybackProgressEventArgs e)
+        private void embyPlaybackProgress(object sessions, PlaybackProgressEventArgs e)
         {
             // _logger.Debug(_json.SerializeToString(sessions));
             // _logger.Debug(_json.SerializeToString(e));
@@ -76,7 +76,7 @@ namespace Simkl.Services
             }
         }
 
-        private async void embyPlaybackStart(object obj, PlaybackProgressEventArgs e)
+        private void embyPlaybackStart(object obj, PlaybackProgressEventArgs e)
         {
             _logger.Debug("EMBY PLAYBACK STARTED");
             _logger.Debug("Obj: " + _json.SerializeToString(obj));

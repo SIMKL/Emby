@@ -148,7 +148,7 @@ namespace Simkl.Api
         {
             HttpRequestOptions options = GetOptions(userToken);
             options.Url = BASE_URL + url;
-            if (data != null) options.RequestContent = _json.SerializeToString(data);
+            if (data != null) options.RequestContent = _json.SerializeToString(data).AsMemory();
 
             return (await _httpClient.Post(options).ConfigureAwait(false)).Content;
         }

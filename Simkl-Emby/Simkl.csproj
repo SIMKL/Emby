@@ -15,7 +15,8 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="mediabrowser.server.core" Version="3.5.0" />
+    <PackageReference Include="MediaBrowser.Server.Core" Version="4.2.0.2" />
+    <PackageReference Include="System.Memory" Version="4.5.3" />
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.5.0" />
   </ItemGroup>
   

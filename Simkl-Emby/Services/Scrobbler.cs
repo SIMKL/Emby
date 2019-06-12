@@ -62,7 +62,7 @@ namespace Simkl.Services
             _logger.Debug("Current time: " + DateTime.Now + ", next scrobble: " + nextScrobble + ", notScrobbled: " + v);
             _logger.Debug("PlaybackProgressEventArgs: " + _json.SerializeToString(e));
             _logger.Debug(e.Session.UserId.ToString());
-            UserConfig userConfig = Plugin.Instance.PluginConfiguration.getByGuid(e.Session.UserId);
+            UserConfig userConfig = Plugin.Instance.PluginConfiguration.getByGuid(System.Guid.Parse(e.Session.UserId));
             if (userConfig.userToken == "")
             {
                 _logger.Info("Can't scrobble: User " + e.Session.UserName + " not logged in");

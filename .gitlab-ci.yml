@@ -6,7 +6,8 @@ build:
   stage: build
   artifacts: 
     paths:
-    - Simkl-Emby/bin/GitLab/netstandard2.0/Simkl.dll
+    - Simkl.dll
   script:
     - cd Simkl-Emby
     - dotnet build -c GitLab
+    - mv bin/GitLab/netstandard2.0/Simkl.dll ../

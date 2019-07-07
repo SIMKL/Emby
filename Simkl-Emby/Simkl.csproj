@@ -22,10 +22,12 @@
   
   <ItemGroup>
     <None Remove="Configuration\configPage.html" />
+    <None Remove="thumb.png" />
   </ItemGroup>
   
   <ItemGroup>
     <EmbeddedResource Include="Configuration\configPage.html" />
+    <EmbeddedResource Include="thumb.png" />
   </ItemGroup>
   
   <ItemGroup>
@@ -37,7 +39,7 @@
   <Target Condition="'$(Configuration)' == 'Debug'" Name="PostBuild" AfterTargets="PostBuildEvent">
     <Error Condition="'$(OS)' != Windows_NT And '$(OS)' != 'Unix'" Text="Unknown OS: $(OS)"/>
     <Exec Condition="'$(OS)' == 'Windows_NT'" Command="xcopy &quot;$(TargetPath)&quot; &quot;%AppData%\Emby-Server\programdata\plugins&quot; /y&#xD;&#xA;tasklist /FI &quot;IMAGENAME eq EmbyServer.exe&quot; 2&gt;NUL | findstr &quot;EmbyServer.exe&quot;&gt;NUL&#xD;&#xA;if &quot;%ERRORLEVEL%&quot;==&quot;0&quot; goto curlRestart&#xD;&#xA;explorer %appdata%\Emby-Server\system\EmbyServer.exe&#xD;&#xA;exit 0&#xD;&#xA;:curlRestart&#xD;&#xA;curl -f -X POST &quot;http://localhost:8096/emby/System/Restart&quot; -H &quot;accept: application/json&quot; -d &quot;&quot;" />
-    <Exec Condition="'$(OS)' == 'Unix'" Command="curl -f -X POST &quot;http://localhost:8096/emby/System/Restart&quot; -H &quot;accept: application/json&quot; -d &quot;&quot;"/>
+    <Exec Condition="'$(OS)' == 'Unix'" Command="cp &quot;$(TargetPath)&quot; /var/lib/emby/plugins/ &amp;&amp; curl -f -X POST &quot;http://localhost:8096/emby/System/Restart&quot; -H &quot;accept: application/json&quot; -d &quot;&quot;"/>
   </Target>
 
 </Project>

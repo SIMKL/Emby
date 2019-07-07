@@ -15,7 +15,7 @@ namespace Simkl.Configuration
             UserConfigs = new UserConfig[] { };
         }
 
-        public int searchByGuid(Guid guid)
+        public int searchByGuid(string guid)
         {
             int index = -1;
             for (int i = 0; index == -1 && i < UserConfigs.Length; i++)
@@ -26,7 +26,7 @@ namespace Simkl.Configuration
             return index;
         }
 
-        public UserConfig getByGuid(Guid guid)
+        public UserConfig getByGuid(string guid)
         {
             int i = searchByGuid(guid);
             return (i == -1)?new UserConfig():UserConfigs[i];

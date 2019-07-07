@@ -9,6 +9,9 @@
    - On Windows: `%AppData%\Emby-Server\programdata\plugins\`
 3. Restart your server (using emby's web interface dashboard or Windows Task Manager)
 
+### Note:
+You'll need the lastest emby version too, usually a beta version!
+
 ## Current features
 
 ## TODO

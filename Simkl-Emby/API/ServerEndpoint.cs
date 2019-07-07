@@ -27,7 +27,7 @@ namespace Simkl.Api
     {
         // Note: In the future, when we'll have config for more than one user, we'll use a parameter
         [ApiMember(Name = "id", Description = "emby's user id", IsRequired = true, DataType = "Guid", ParameterType = "path", Verb = "GET")]
-        public Guid userId { get; set; }
+        public string userId { get; set; }
     }
 
     class ServerEndpoint : IService, IHasResultFactory

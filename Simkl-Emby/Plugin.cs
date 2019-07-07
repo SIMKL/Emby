@@ -1,18 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-// using System.IO;    // IPluginConfigurationPage
+using System.IO;    // IPluginConfigurationPage
 // using System.Reflection;    // IPluginConfigurationPage
 
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Model.Plugins;
+using MediaBrowser.Model.Drawing;
 
 using Simkl.Configuration;
 
 namespace Simkl
 {
-    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
+    public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages, IHasThumbImage
     {
         // public override string Name { get { return "Simkl TV Tracker"; } }
         // https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/operators/lambda-operator#expression-body-definition
@@ -39,5 +40,13 @@ namespace Simkl
             };
 
         public PluginConfiguration PluginConfiguration => Configuration;
+
+        public ImageFormat ThumbImageFormat {
+            get {return ImageFormat.Png; }
+        }
+
+        public Stream GetThumbImage() {
+            return GetType().Assembly.GetManifestResourceStream("Simkl.thumb.png");
+        }
     }
 }

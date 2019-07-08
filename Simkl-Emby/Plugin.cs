@@ -42,11 +42,11 @@ namespace Simkl
         public PluginConfiguration PluginConfiguration => Configuration;
 
         public ImageFormat ThumbImageFormat {
-            get {return ImageFormat.Png; }
+            get {return ImageFormat.Jpg; }
         }
 
         public Stream GetThumbImage() {
-            return GetType().Assembly.GetManifestResourceStream("Simkl.thumb.png");
+            return GetType().Assembly.GetManifestResourceStream("Simkl.emby_thumb.jpg");
         }
     }
 }

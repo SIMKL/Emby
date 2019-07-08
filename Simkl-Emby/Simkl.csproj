@@ -22,12 +22,12 @@
   
   <ItemGroup>
     <None Remove="Configuration\configPage.html" />
-    <None Remove="thumb.png" />
+    <None Remove="emby_thumb.jpg" />
   </ItemGroup>
   
   <ItemGroup>
     <EmbeddedResource Include="Configuration\configPage.html" />
-    <EmbeddedResource Include="thumb.png" />
+    <EmbeddedResource Include="emby_thumb.jpg" />
   </ItemGroup>
   
   <ItemGroup>
@@ -39,7 +39,10 @@
   <Target Condition="'$(Configuration)' == 'Debug'" Name="PostBuild" AfterTargets="PostBuildEvent">
     <Error Condition="'$(OS)' != Windows_NT And '$(OS)' != 'Unix'" Text="Unknown OS: $(OS)"/>
     <Exec Condition="'$(OS)' == 'Windows_NT'" Command="xcopy &quot;$(TargetPath)&quot; &quot;%AppData%\Emby-Server\programdata\plugins&quot; /y&#xD;&#xA;tasklist /FI &quot;IMAGENAME eq EmbyServer.exe&quot; 2&gt;NUL | findstr &quot;EmbyServer.exe&quot;&gt;NUL&#xD;&#xA;if &quot;%ERRORLEVEL%&quot;==&quot;0&quot; goto curlRestart&#xD;&#xA;explorer %appdata%\Emby-Server\system\EmbyServer.exe&#xD;&#xA;exit 0&#xD;&#xA;:curlRestart&#xD;&#xA;curl -f -X POST &quot;http://localhost:8096/emby/System/Restart&quot; -H &quot;accept: application/json&quot; -d &quot;&quot;" />
-    <Exec Condition="'$(OS)' == 'Unix'" Command="cp &quot;$(TargetPath)&quot; /var/lib/emby/plugins/ &amp;&amp; curl -f -X POST &quot;http://localhost:8096/emby/System/Restart&quot; -H &quot;accept: application/json&quot; -d &quot;&quot;"/>
+    <!-- On Linux, remember to grant write permissions on the file /var/emby/plugins/Simkl.dll to the user -->
+    <!-- Also remember to add a polkit rule to restart via systemctl (safer that web interface) -->
+    <!-- https://serverfault.com/questions/841099/systemd-grant-an-unprivileged-user-permission-to-alter-one-specific-service -->
+    <Exec Condition="'$(OS)' == 'Unix'" Command="cp &quot;$(TargetPath)&quot; /var/lib/emby/plugins/ &amp;&amp; systemctl restart emby-server"/>
   </Target>
 
 </Project>

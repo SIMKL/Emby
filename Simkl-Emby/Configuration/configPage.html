@@ -105,14 +105,14 @@
                     }
                 },
                 stopLoginProcess : async function () {
-                    this.onLoginProccess = false;
+                    this.onLoginProcess = false;
                     window.clearTimeout(this.loginTimer);
                     window.clearInterval(this.remainingTimer);
                     $("#loginButtonContainer").show();
                     $("#loggingIn").hide();
                 },
                 onSelectorChange : async function () {
-                    if (this.onLoginProccess) this.stopLoginProcess();
+                    if (this.onLoginProcess) this.stopLoginProcess();
                     this.loadConfig($("#user-selector").val(), null);
                 }
             }

@@ -11,7 +11,7 @@ namespace Simkl.Configuration
         public int min_length { get; set; } // Minimum length for scrobbling (in minutes)
         public string userToken { get; set; }   // Is the user logged in
         public int scrobbleTimeout { get; set; } // Time between scrobbling tries
-        public string id { get; set; }    // Simkl user id
+        public string guid { get; set; }    // Emby user id
 
         public UserConfig()
         {

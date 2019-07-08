@@ -1,6 +1,6 @@
 ﻿using System;
 using MediaBrowser.Model.Plugins;
-using System.Collections.Generic;
+using System.Linq;
 
 namespace Simkl.Configuration
 {
@@ -9,13 +9,15 @@ namespace Simkl.Configuration
     /// </summary>
     public class PluginConfiguration : BasePluginConfiguration
     {
-        public Dictionary<string, UserConfig> userConfigs { get; set; }
+        public UserConfig[] userConfigs { get; set; }
 
-        public PluginConfiguration() {}
+        public PluginConfiguration() {
+            userConfigs = new UserConfig[]{};
+        }
 
         public UserConfig getByGuid(string guid)
         {
-            return userConfigs[guid];
+            return userConfigs.Where(c => c.guid == guid).First();
         }
 
         /// <summary>
@@ -24,10 +26,10 @@ namespace Simkl.Configuration
         /// <param name="userToken">The Simkl's user token</param>
         public void deleteUserToken(string userToken)
         {
-            foreach (KeyValuePair<string,UserConfig> config in userConfigs)
+            foreach (UserConfig config in userConfigs)
             {
-                if (config.Value.userToken == userToken)
-                    config.Value.userToken = "";
+                if (config.userToken == userToken)
+                    config.userToken = "";
             }
         }
     }

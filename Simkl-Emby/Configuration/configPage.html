@@ -33,7 +33,7 @@
             var SimklConfig = {
                 guid: "2ecd91d5-b14b-4b92-8eb9-52c098edfc87",
                 onLoginProccess: false,
-                configCache: null,
+                configCache: [],
                 loginTimer: null,
                 remainingTimer: null,
                 finish: null,
@@ -78,13 +78,28 @@
                     if (new Date() > this.finish) {
                         Dashboard.alert("Timed out!");
                         this.stopLoginProcess();
-                    }
-                    if (response.result == "KO") {
+                    } else if (response.result == "KO") {
                         this.loginTimer = window.setTimeout(this.checkLoginProcess.bind(this,code), code.interval*1000);
                     } else if (response.result == "OK") {
-                        // Save key on settings
-
                         this.stopLoginProcess();
+
+                        // Save key on settings
+                        var uguid = $("#user-selector").val();
+                        var filter = this.configCache.userConfigs.filter(function(c) {
+                            return c.guid == uguid;
+                        });
+                        if (filter.length > 0) {
+                            filter[0].userToken = response.access_token;
+                        } else {
+                            this.configCache.userConfigs.push({
+                                guid: uguid,
+                                userToken: response.access_token
+                            });
+                        }
+
+                        console.log(this.configCache);
+
+                        ApiClient.updatePluginConfiguration(this.guid, this.configCache);
                     } else {
                         Dashboard.alert("Error logging in");
                     }

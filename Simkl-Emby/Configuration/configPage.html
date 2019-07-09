@@ -28,6 +28,21 @@
                     </div>
                     <div id="configOptionsContainer" hidden>
                         <h3>Hello again <span id="simklName">USERNAME</span>!</h3>
+                        <h2>Scrobbling options:</h2>
+                        <div class="checkboxcontainer">
+                            <label>
+                                <input is="emby-checkbox" type="checkbox" id="autoscrobble" />
+                                <span>Enable autoscrobbling</span>
+                            </label>
+                        </div>
+                        <div class="inputContainer">
+                            <input is="emby-input" id="scr_pct" type="number" min="0" max="100" pattern="[0-9]*" label="Scrobbling percentage:" />
+                            <div class="fieldDescription">
+                                Percentage watched needed to scrobble
+                            </div>
+                        </div>
+                        <button is="emby-button" type="submit" class="raised button-submit block"><span>${ButtonSave}</span></button>
+                        <button is="emby-button" type="button" class="raised block" onclick="history.back();"><span>${ButtonCancel}</span></button>
                     </div>
                 </form>
             </div>
@@ -62,8 +77,29 @@
                         $("#loginButtonContainer").show();
                     }
                 },
+                saveConfig : async function(guid) {
+                    var uconfig = this.configCache.userConfigs.filter(e => e.guid == guid)[0];
+                    
+                    for (var key in uconfig) {
+                        var element = $("#configOptionsContainer #"+key);
+                        if (element.is(":checkbox")) {
+                            uconfig[key] = element.attr("checked");
+                        } else {
+                            if (element.val() != null) uconfig[key] = element.val();
+                        }
+                    }
+
+                    console.log("Saving config:");
+                    console.log(this.configCache);
+                    ApiClient.updatePluginConfiguration(this.guid, this.configCache).then(Dashboard.processPluginConfigurationUpdateResult);
+                },
                 populateOptionsContainer : async function(userConfig) {
                     $("#simklName").html(SimklAPI.getUserSettings(userConfig.guid).user.name);
+
+                    for (var key in userConfig) {
+                        $("#configOptionsContainer input[type=checkbox]#"+key).attr("checked", userConfig[key]);
+                        $("#configOptionsContainer input[type=number]#"+key).val(userConfig[key]);
+                    }
                 },
                 startLoginProcess : async function () {
                     this.onLoginProcess = true;
@@ -177,12 +213,19 @@
             }
 
             $("#SimklConfigurationPage").on("pageshow", async function(e) {
-                Dashboard.alert("WARNING: This is only a prototype, not currently working!");
                 Dashboard.showLoadingMsg();
                 await Promise.all([
                     ApiClient.getUsers().then(SimklConfig.populateUsers),
                     ApiClient.getPluginConfiguration(SimklConfig.guid).then(SimklConfig.loadConfig.bind(SimklConfig, ApiClient.getCurrentUserId()))]);
                 Dashboard.hideLoadingMsg();
+            });
+
+            $("#SimklConfigurationForm").on("submit", function(e) {
+                Dashboard.showLoadingMsg();
+                SimklConfig.saveConfig($("#user-selector").val());
+                Dashboard.hideLoadingMsg();
+
+                return false;
             });
         </script>
     </div>

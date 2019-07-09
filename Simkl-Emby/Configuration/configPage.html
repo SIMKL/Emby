@@ -14,7 +14,7 @@
                             <!-- This will be populated by SimklConfig.populateUsers -->
                         </select>
                     </div>
-                    <div id="loginButtonContainer">
+                    <div id="loginButtonContainer" hidden>
                         <h3>It seems you are not logged in, do you wish to log in?</h3>
                         <button onclick="SimklConfig.startLoginProcess();" is="emby-button" type="button" class="raised button-submit block"><span>Log In</span></button>
                         <button onclick="location.href='https://simkl.com/';" is="emby-button" type="button" class="raised block"><span>Create an account</span></button>
@@ -25,6 +25,9 @@
                         <h3 id="loginPin"></h3>
                         <span id="loginSecondsRemaining">900</span> seconds remaining
                         <button onclick="SimklConfig.stopLoginProcess();" is="emby-button" type="button" class="raised button-cancel block"><span>Cancel</span></button>
+                    </div>
+                    <div id="configOptionsContainer" hidden>
+                        <h3>Hello again <span id="simklName">USERNAME</span>!</h3>
                     </div>
                 </form>
             </div>
@@ -48,9 +51,21 @@
 
                     console.log("Simkl: Loading config for user " + user);
                     console.log(config);
+
+                    $("#loginButtonContainer").hide();
+                    $("#configOptionsContainer").hide();
+
+                    if (config.userConfigs.some(e => e.guid == user && e.userToken != null)) {
+                        $("#configOptionsContainer").show();
+                        this.populateOptionsContainer(config.userConfigs.filter(e => e.guid == user)[0]);
+                    } else {
+                        $("#loginButtonContainer").show();
+                    }
+                },
+                populateOptionsContainer : async function(userConfig) {
+                    $("#simklName").html(SimklAPI.getUserSettings(userConfig.guid).user.name);
                 },
                 startLoginProcess : async function () {
-                    Dashboard.alert("Starting logging for user " + $("#user-selector").val());
                     this.onLoginProcess = true;
 
                     var code = SimklAPI.getCode();
@@ -144,6 +159,19 @@
                         console.log(request);
                         Dashboard.alert("Some error occurred, see browser log for more details");
                         SimklConfig.stopLoginProcess();
+                    }
+                },
+                getUserSettings: function (secret) {
+                    var uri = "/Simkl/users/settings/" + secret;
+                    var request = new XMLHttpRequest();
+                    request.open("GET", uri, false);
+                    request.send();
+
+                    if (request.status == 200) {
+                        return $.parseJSON(request.response);
+                    } else {
+                        console.log(request);
+                        Dashboard.alert("Something went wrong, see logs for more details");
                     }
                 }
             }

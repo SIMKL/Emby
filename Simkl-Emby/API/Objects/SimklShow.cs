@@ -10,12 +10,13 @@ namespace Simkl.Api.Objects
         public string title { get; set; }
         public int? year { get; set; }
         public Season[] seasons { get; set; }
+        public override SimklIds ids { get; set; }
 
         public static SimklShow createFromEpisode(BaseItemDto MediaInfo)
         {
             SimklShow simklShow = new SimklShow {
                 title = MediaInfo.SeriesName,
-                ids = new Ids(MediaInfo.ProviderIds),
+                ids = new SimklShowIds(MediaInfo.ProviderIds),
                 year = MediaInfo.ProductionYear,
                 seasons = new Season[]
                 {
@@ -40,7 +41,7 @@ namespace Simkl.Api.Objects
         // TODO: watched_at
     }
 
-    public class Season: MediaObject
+    public class Season
     {
         public int? number { get; set; }
         public ShowEpisode[] episodes { get; set; }

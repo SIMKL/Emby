@@ -2,8 +2,8 @@
 
 namespace Simkl.Api.Objects
 {
-    public class MediaObject
+    public abstract class MediaObject
     {
-        public Ids ids { get; set; }
+        public abstract SimklIds ids { get; set; }
     }
 }

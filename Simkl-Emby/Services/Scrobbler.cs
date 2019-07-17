@@ -84,23 +84,9 @@ namespace Simkl.Services
                     lastScrobbled[e.Session.UserId] = e.Session.NowPlayingItem.Id;
 
                     if (_notifications.GetNotificationTypes().Any(t => t.Type == SimklNotificationsFactory.NOTIFICATION_MOVIE_TYPE && t.Enabled)) {
-                        String message = String.Format("The movie {0}", e.Session.NowPlayingItem.Name);
-
-                        int ? year = e.Session.NowPlayingItem.ProductionYear ?? e.Session.NowPlayingItem.DateCreated?.Year;
-                        if (year != null)
-                            message += " (" + year + ")";
-
-                        message += " has been scrobbled to your account";
-
-                        // TODO: Set url parameter to simkl's movie url
-                        _notifications.SendNotification(new NotificationRequest{
-                            NotificationType = SimklNotificationsFactory.NOTIFICATION_MOVIE_TYPE,
-                            Date = DateTime.UtcNow,
-                            Name = "Movie Scrobbled to Simkl!",
-                            Description = message,
-                            UserIds = new long[] {e.Session.UserInternalId},
-                            SendToUserMode = SendToUserType.Custom
-                        }, e.Session.FullNowPlayingItem, CancellationToken.None);
+                        _notifications.SendNotification(
+                            SimklNotificationsFactory.GetNotificationRequest(e.Session.FullNowPlayingItem, e.Session.UserInternalId),
+                            e.Session.FullNowPlayingItem, CancellationToken.None);
                     }
                 } else {
                     _logger.Debug("Alredy scrobbled {0} for {1}", e.Session.NowPlayingItem.Name, e.Session.UserName);

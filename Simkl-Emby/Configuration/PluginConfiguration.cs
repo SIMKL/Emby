@@ -17,7 +17,7 @@ namespace Simkl.Configuration
 
         public UserConfig getByGuid(string guid)
         {
-            return userConfigs.Where(c => c.guid == guid).First();
+            return userConfigs.Where(c => c.guid == guid).FirstOrDefault();
         }
 
         /// <summary>

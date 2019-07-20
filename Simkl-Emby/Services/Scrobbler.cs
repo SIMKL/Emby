@@ -9,10 +9,10 @@ using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Controller.Session;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
+using MediaBrowser.Controller.Entities.TV;
 using MediaBrowser.Model.Logging;
 using MediaBrowser.Model.Serialization;
 using MediaBrowser.Controller.Notifications;
-using MediaBrowser.Model.Notifications;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Library;
 using Simkl.Configuration;
@@ -29,7 +29,8 @@ namespace Simkl.Services
         private Dictionary<string, string> lastScrobbled;   // Library ID of last scrobbled item
 
         // public static Scrobbler Instance; Instance = this
-        public Scrobbler(IJsonSerializer json, ISessionManager sessionManager, ILogManager logManager, IHttpClient httpClient, INotificationManager notifications)
+        public Scrobbler(IJsonSerializer json, ISessionManager sessionManager, ILogManager logManager,
+            IHttpClient httpClient, INotificationManager notifications)
         {
             _json = json;
             _sessionManager = sessionManager;
@@ -58,7 +59,18 @@ namespace Simkl.Services
             if (session.NowPlayingItem.RunTimeTicks < 60 * 10000 * config.min_length) return false;
 
             BaseItem item = session.FullNowPlayingItem;
-            if (item is Movie) return true; // TODO: Working only with movies
+            if (item is Movie) return config.scrobbleMovies;
+            else if (item is Episode) return config.scrobbleShows;
+
+            return false;
+        }
+
+        private bool canSendNotification(BaseItem item) {
+            if (item is Movie)
+                return _notifications.GetNotificationTypes().Any(t => t.Type == SimklNotificationsFactory.NOTIFICATION_MOVIE_TYPE && t.Enabled);
+            
+            if (item is Episode)
+                return _notifications.GetNotificationTypes().Any(t => t.Type == SimklNotificationsFactory.NOTIFICATION_SHOW_TYPE && t.Enabled);
 
             return false;
         }
@@ -83,7 +95,7 @@ namespace Simkl.Services
                     _logger.Debug("Scrobbled without errors");
                     lastScrobbled[e.Session.UserId] = e.Session.NowPlayingItem.Id;
 
-                    if (_notifications.GetNotificationTypes().Any(t => t.Type == SimklNotificationsFactory.NOTIFICATION_MOVIE_TYPE && t.Enabled)) {
+                    if (canSendNotification(e.Session.FullNowPlayingItem)) {
                         _notifications.SendNotification(
                             SimklNotificationsFactory.GetNotificationRequest(e.Session.FullNowPlayingItem, e.Session.UserInternalId),
                             e.Session.FullNowPlayingItem, CancellationToken.None);

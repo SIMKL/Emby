@@ -10,11 +10,11 @@ namespace Simkl.Api.Objects
         public override SimklIds ids { get; set; }
         public string watched_at { get; }
 
-        public SimklMovie (BaseItemDto MediaInfo)
+        public SimklMovie (BaseItemDto item)
         {
-            title = MediaInfo.OriginalTitle;
-            year = MediaInfo.ProductionYear;
-            ids = new SimklMovieIds(MediaInfo.ProviderIds);
+            title = item.OriginalTitle;
+            year = item.ProductionYear;
+            ids = new SimklMovieIds(item.ProviderIds);
             watched_at = DateTime.UtcNow.ToString("yyyy-MM-dd HH\\:mm\\:ss");
         }
     }

@@ -12,26 +12,21 @@ namespace Simkl.Api.Objects
         public Season[] seasons { get; set; }
         public override SimklIds ids { get; set; }
 
-        public static SimklShow createFromEpisode(BaseItemDto MediaInfo)
+        public SimklShow(BaseItemDto MediaInfo)
         {
-            SimklShow simklShow = new SimklShow {
-                title = MediaInfo.SeriesName,
-                ids = new SimklShowIds(MediaInfo.ProviderIds),
-                year = MediaInfo.ProductionYear,
-                seasons = new Season[]
+            title = MediaInfo.SeriesName;
+            ids = new SimklShowIds(MediaInfo.ProviderIds);
+            year = MediaInfo.ProductionYear;
+            seasons = new Season[] {
+                new Season
                 {
-                    new Season
+                    number = MediaInfo.ParentIndexNumber,
+                    episodes = new ShowEpisode[]
                     {
-                        number = MediaInfo.ParentIndexNumber,
-                        episodes = new ShowEpisode[]
-                        {
-                            new ShowEpisode { number = MediaInfo.IndexNumber }
-                        }
+                        new ShowEpisode { number = MediaInfo.IndexNumber }
                     }
                 }
             };
-
-            return simklShow;
         }
     }
 

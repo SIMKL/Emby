@@ -84,18 +84,19 @@ namespace Simkl.Api
         }
 
         /* NOW EVERYTHING RELATED TO SCROBBLING */
-        public async void markAsWatched(BaseItemDto MediaInfo, string userToken)
+        public async void markAsWatched(BaseItemDto item, string userToken)
         {
             SimklHistory history = new SimklHistory();
-            _logger.Info("Scrobbling mediainfo: " + _json.SerializeToString(MediaInfo));
-            if (MediaInfo.IsMovie == true || MediaInfo.Type == "Movie")
+            _logger.Info("Item type: " + item.Type);
+            _logger.Info("Scrobbling mediainfo: " + _json.SerializeToString(item));
+            if (item.IsMovie == true || item.Type == "Movie")
             {
-                history.movies.Add(new SimklMovie(MediaInfo));
+                history.movies.Add(new SimklMovie(item));
             }
-            else if (MediaInfo.IsSeries == true || MediaInfo.Type == "Episode")
+            else if (item.IsSeries == true || item.Type == "Episode")
             {
                 // TODO: TV Shows scrobbling (WIP)
-                history.shows.Add(SimklShow.createFromEpisode(MediaInfo));
+                history.shows.Add(new SimklShow(item));
             }
             _logger.Info("Scrobbling " + _json.SerializeToString(history));
             try

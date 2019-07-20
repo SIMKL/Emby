@@ -5,17 +5,27 @@ using MediaBrowser.Controller.Entities;
 using System;
 using System.Collections.Generic;
 using MediaBrowser.Controller.Entities.Movies;
+using MediaBrowser.Controller.Entities.TV;
 
 namespace Simkl.Services {
     public class SimklNotificationsFactory : INotificationTypeFactory {
+        public const string NOTIFICATION_CATEGORY = "Simkl Scrobbling";
         public const string NOTIFICATION_MOVIE_TYPE = "SimklScrobblingMovie";
+        public const string NOTIFICATION_SHOW_TYPE = "SimklScrobblingShow";
 
         public IEnumerable<NotificationTypeInfo> GetNotificationTypes() {
             return new List<NotificationTypeInfo> {
                 new NotificationTypeInfo {
                     Type = NOTIFICATION_MOVIE_TYPE,
                     Name = "Simkl Scrobbling Movie",
-                    Category = "Simkl Scrobbling",
+                    Category = NOTIFICATION_CATEGORY,
+                    Enabled = true,
+                    IsBasedOnUserEvent = false
+                },
+                new NotificationTypeInfo {
+                    Type = NOTIFICATION_SHOW_TYPE,
+                    Name = "Simkl Scrobbling TV Show",
+                    Category = NOTIFICATION_CATEGORY,
                     Enabled = true,
                     IsBasedOnUserEvent = false
                 }
@@ -37,6 +47,13 @@ namespace Simkl.Services {
                 nr.Name = "Movie Scrobbled to Simkl";
                 nr.Description = "The movie " + item.Name;
                 if (year != null) nr.Description += " (" + year + ")";
+                nr.Description += " has been scrobbled to your account";
+            }
+
+            if (item is Episode) {
+                nr.NotificationType = NOTIFICATION_SHOW_TYPE;
+                nr.Name = "Episode Scrobbled to Simkl";
+                nr.Description = item.Name;
                 nr.Description += " has been scrobbled to your account";
             }
 

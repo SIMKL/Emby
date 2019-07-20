@@ -17,14 +17,14 @@ namespace Simkl.Services {
             return new List<NotificationTypeInfo> {
                 new NotificationTypeInfo {
                     Type = NOTIFICATION_MOVIE_TYPE,
-                    Name = "Simkl Scrobbling Movie",
+                    Name = "Scrobbling Movie",
                     Category = NOTIFICATION_CATEGORY,
                     Enabled = true,
                     IsBasedOnUserEvent = false
                 },
                 new NotificationTypeInfo {
                     Type = NOTIFICATION_SHOW_TYPE,
-                    Name = "Simkl Scrobbling TV Show",
+                    Name = "Scrobbling TV Show",
                     Category = NOTIFICATION_CATEGORY,
                     Enabled = true,
                     IsBasedOnUserEvent = false

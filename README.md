@@ -9,8 +9,9 @@
    - On Windows: `%AppData%\Emby-Server\programdata\plugins\`
 3. Restart your server (using emby's web interface dashboard or Windows Task Manager)
 
-### Note:
-You'll need the lastest emby version too, usually a beta version!
+## How to enable notifications
+1. On Emby's dashboard, you'll have to go to the bottom and, on expert options, select "Notifications"
+2. There, on section "Simkl Scrobbling", enable both notifications
 
 ## Current features
 

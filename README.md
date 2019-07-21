@@ -10,8 +10,21 @@
    - or: `%AppData%\Roaming\Emby-Server\programdata\plugins\`
    - or: `%AppData%\Roaming\Emby-Server\plugins\`
 3. Restart your server (using emby's web interface dashboard or Windows Task Manager)
+4. Open Emby Browser Library
+5. Select Expert -> Plugins -> Simkl TV Tracker -> Settings
+6. Click Log in
+7. Open the link (it already has your PIN) or visit https://simkl.com/pin/ and enter the provided PIN
+8. Come back to Plugin settings, refresh browser if needed. 
 
-## How to enable notifications
+You should now see your `Name` from Simkl there and `Scrobbling options` with checkmarks enabled:
+
+`✔ Autoscrobbling Movies`
+
+`✔ Autoscrobbling TV Shows`
+
+`Scrobbling percentage: 70`
+
+## How to enable notifications when something is marked as watched
 1. On Emby's dashboard, you'll have to go to the bottom and, on expert options, select "Notifications"
 2. There, on section "Simkl Scrobbling", enable both notifications
 

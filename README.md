@@ -1,4 +1,4 @@
-# Simkl's Kodi Scrobbler
+# Simkl's Emby Scrobbler
 [![](https://img.shields.io/github/license/SIMKL/emby.svg?style=flat-square)][license]
 [![](https://img.shields.io/gitlab/pipeline/daviddavo/simkl-emby.svg?style=flat-square)](https://gitlab.com/daviddavo/simkl-emby/pipelines)
 
@@ -7,6 +7,7 @@
 2. Put the plugin on your server's plugin folder
    - On Linux (Arch): `/usr/lib/emby-server/plugins/`
    - On Windows: `%AppData%\Emby-Server\programdata\plugins\`
+   -- or: `%AppData%\Roaming\Emby-Server\plugins\`
 3. Restart your server (using emby's web interface dashboard or Windows Task Manager)
 
 ## How to enable notifications

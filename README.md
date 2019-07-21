@@ -7,7 +7,8 @@
 2. Put the plugin on your server's plugin folder
    - On Linux (Arch): `/usr/lib/emby-server/plugins/`
    - On Windows: `%AppData%\Emby-Server\programdata\plugins\`
-   -- or: `%AppData%\Roaming\Emby-Server\plugins\`
+   - or: `%AppData%\Roaming\Emby-Server\programdata\plugins\`
+   - or: `%AppData%\Roaming\Emby-Server\plugins\`
 3. Restart your server (using emby's web interface dashboard or Windows Task Manager)
 
 ## How to enable notifications

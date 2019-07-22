@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.IO;
 // using System.Threading;
 using System.Threading.Tasks;
@@ -83,8 +81,12 @@ namespace Simkl.Api
             }
         }
 
+        public async Task<MediaObject> getFromFile(string filename) {
+            return _json.DeserializeFromStream<MediaObject>(await _post("/search/file/"));
+        }
+
         /* NOW EVERYTHING RELATED TO SCROBBLING */
-        public async void markAsWatched(BaseItemDto item, string userToken)
+        public async Task<bool> markAsWatched(BaseItemDto item, string userToken)
         {
             SimklHistory history = new SimklHistory();
             _logger.Info("Item type: " + item.Type);
@@ -98,15 +100,18 @@ namespace Simkl.Api
                 // TODO: TV Shows scrobbling (WIP)
                 history.shows.Add(new SimklShow(item));
             }
-            _logger.Info("Scrobbling " + _json.SerializeToString(history));
+            _logger.Info("POSTing " + _json.SerializeToString(history));
             try
             {
-                await SyncHistoryAsync(history, userToken);
+                SyncHistoryResponse r = await SyncHistoryAsync(history, userToken);
+                _logger.Debug("Response: " + _json.SerializeToString(r));
+                return history.movies.Count == r.added.movies && history.shows.Count == r.added.shows;
             }
             catch (MediaBrowser.Model.Net.HttpException e) when (e.StatusCode == System.Net.HttpStatusCode.Unauthorized)
             {
                 _logger.Error("Invalid user token " + userToken + ", deleting");
                 Plugin.Instance.Configuration.deleteUserToken(userToken);
+                return false;
             }
         }
 
@@ -116,11 +121,9 @@ namespace Simkl.Api
         /// <param name="history">History object</param>
         /// <param name="userToken">User token</param>
         /// <returns></returns>
-        public async Task<Stream> SyncHistoryAsync(SimklHistory history, string userToken)
+        public async Task<SyncHistoryResponse> SyncHistoryAsync(SimklHistory history, string userToken)
         {
-            return await _post("/sync/history", userToken, history);
-
-            // using (var r = await _get("/sync/history"))
+            return _json.DeserializeFromStream<SyncHistoryResponse>(await _post("/sync/history", userToken, history));
         }
 
         /// <summary>

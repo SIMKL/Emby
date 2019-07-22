@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
+using System.Collections.Generic;
 using System.Linq; 
 
 using Simkl.Api;
@@ -75,7 +75,7 @@ namespace Simkl.Services
             return false;
         }
         
-        private void embyPlaybackProgress(object sessions, PlaybackProgressEventArgs e)
+        private async void embyPlaybackProgress(object sessions, PlaybackProgressEventArgs e)
         {
             UserConfig userConfig = Plugin.Instance.PluginConfiguration.getByGuid(e.Session.UserId);
             if (userConfig is null || userConfig.userToken == "")
@@ -84,24 +84,26 @@ namespace Simkl.Services
                 return;
             }
 
-            if (canBeScrobbled(userConfig, e.Session))
-            {
-                string uid = e.Session.UserId, npid = e.Session.NowPlayingItem.Id;
+            if (!canBeScrobbled(userConfig, e.Session)) return;
 
-                if (!lastScrobbled.ContainsKey(uid) || lastScrobbled[uid] != npid) {
-                    _logger.Info("Trying to scrobble {0} ({1}) for {2} ({3})", e.Session.NowPlayingItem.Name, e.Session.NowPlayingItem.Id,
-                        e.Session.UserName, e.Session.UserId);
-                    _api.markAsWatched(e.MediaInfo, userConfig.userToken);
-                    _logger.Debug("Scrobbled without errors");
-                    lastScrobbled[e.Session.UserId] = e.Session.NowPlayingItem.Id;
+            string uid = e.Session.UserId, npid = e.Session.NowPlayingItem.Id;
+            if (lastScrobbled.ContainsKey(uid) && lastScrobbled[uid] == npid) {
+                _logger.Debug("Alredy scrobbled {0} for {1}", e.Session.NowPlayingItem.Name, e.Session.UserName);
+                return;
+            }
 
-                    if (canSendNotification(e.Session.FullNowPlayingItem)) {
-                        _notifications.SendNotification(
-                            SimklNotificationsFactory.GetNotificationRequest(e.Session.FullNowPlayingItem, e.Session.UserInternalId),
-                            e.Session.FullNowPlayingItem, CancellationToken.None);
-                    }
-                } else {
-                    _logger.Debug("Alredy scrobbled {0} for {1}", e.Session.NowPlayingItem.Name, e.Session.UserName);
+            _logger.Info("Trying to scrobble {0} ({1}) for {2} ({3})", 
+                e.Session.NowPlayingItem.Name, e.Session.NowPlayingItem.Id,
+                e.Session.UserName, e.Session.UserId);
+
+            if(await _api.markAsWatched(e.MediaInfo, userConfig.userToken)) {
+                _logger.Debug("Scrobbled without errors");
+                lastScrobbled[e.Session.UserId] = e.Session.NowPlayingItem.Id;
+
+                if (canSendNotification(e.Session.FullNowPlayingItem)) {
+                    await _notifications.SendNotification(
+                        SimklNotificationsFactory.GetNotificationRequest(e.Session.FullNowPlayingItem, e.Session.UserInternalId),
+                        e.Session.FullNowPlayingItem, CancellationToken.None);
                 }
             }
         }

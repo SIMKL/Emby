@@ -28,6 +28,7 @@
                     </div>
                     <div id="configOptionsContainer" hidden>
                         <h3>Hello again <span id="simklName">USERNAME</span>!</h3>
+                        <button onclick="SimklConfig.logOut();" is="emby-button" type="button" class="raised button block"><span>Log Out</span></button>
                         <h2>Scrobbling options:</h2>
                         <div class="checkboxcontainer">
                             <label>
@@ -157,6 +158,7 @@
                         console.log(this.configCache);
 
                         ApiClient.updatePluginConfiguration(this.guid, this.configCache);
+                        this.loadConfig(uguid);
                     } else {
                         Dashboard.alert("Error logging in");
                     }
@@ -171,6 +173,25 @@
                 onSelectorChange : async function () {
                     if (this.onLoginProcess) this.stopLoginProcess();
                     this.loadConfig($("#user-selector").val(), null);
+                },
+                logOut : function(uguid) {
+                    if (uguid == null) uguid = $("#user-selector").val();
+
+                    // e1f34a57cb3c4767ab6f29cc5c7c0566
+                    var filter = this.configCache.userConfigs.filter(function (c) {
+                        return c.guid == uguid;
+                    });
+                    console.log(filter);
+
+                    if (filter.length > 0) {
+                        filter[0].userToken = "";
+                    } else {
+                        console.log("User not found " + uguid);
+                    }
+
+                    console.log(this.configCache);
+                    ApiClient.updatePluginConfiguration(this.guid, this.configCache);
+                    this.loadConfig(uguid);
                 }
             }
 

@@ -48,5 +48,12 @@ namespace Simkl
         public Stream GetThumbImage() {
             return GetType().Assembly.GetManifestResourceStream("Simkl.emby_thumb.jpg");
         }
+
+        public void deleteUserToken(string userToken) {
+            foreach (UserConfig config in Configuration.userConfigs) {
+                if (config.userToken == userToken) config.userToken = "";
+            }
+            SaveConfiguration();
+        }
     }
 }

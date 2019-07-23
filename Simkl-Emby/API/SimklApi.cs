@@ -119,7 +119,7 @@ namespace Simkl.Api
                 return _json.DeserializeFromStream<SyncHistoryResponse>(await _post("/sync/history", userToken, history));
             } catch (MediaBrowser.Model.Net.HttpException e) when (e.StatusCode == System.Net.HttpStatusCode.Unauthorized) {
                 _logger.Error("Invalid user token " + userToken + ", deleting");
-                Plugin.Instance.Configuration.deleteUserToken(userToken);
+                Plugin.Instance.deleteUserToken(userToken);
                 throw new InvalidTokenException("Invalid user token " + userToken);
             }
         }

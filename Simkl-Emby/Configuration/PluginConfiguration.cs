@@ -1,4 +1,5 @@
 ﻿using System;
+using MediaBrowser.Model.Serialization;
 using MediaBrowser.Model.Plugins;
 using System.Linq;
 
@@ -18,19 +19,6 @@ namespace Simkl.Configuration
         public UserConfig getByGuid(string guid)
         {
             return userConfigs.Where(c => c.guid == guid).FirstOrDefault();
-        }
-
-        /// <summary>
-        /// Deletes an invalid or revoked userToken for all accounts that use it
-        /// </summary>
-        /// <param name="userToken">The Simkl's user token</param>
-        public void deleteUserToken(string userToken)
-        {
-            foreach (UserConfig config in userConfigs)
-            {
-                if (config.userToken == userToken)
-                    config.userToken = "";
-            }
         }
     }
 }

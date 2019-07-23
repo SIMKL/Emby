@@ -76,7 +76,7 @@
                     $("#loginButtonContainer").hide();
                     $("#configOptionsContainer").hide();
 
-                    if (config.userConfigs.some(e => e.guid == user && e.userToken != null)) {
+                    if (config.userConfigs.some(e => e.guid == user && e.userToken != null && e.userToken != "")) {
                         $("#configOptionsContainer").show();
                         this.populateOptionsContainer(config.userConfigs.filter(e => e.guid == user)[0]);
                     } else {

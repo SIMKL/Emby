@@ -9,6 +9,7 @@ using MediaBrowser.Model.Serialization;
 
 using Simkl.Api.Objects;
 using Simkl.Api.Responses;
+using Simkl.Api.Exceptions;
 using MediaBrowser.Model.Dto;
 
 namespace Simkl.Api
@@ -89,7 +90,6 @@ namespace Simkl.Api
         public async Task<bool> markAsWatched(BaseItemDto item, string userToken)
         {
             SimklHistory history = new SimklHistory();
-            _logger.Info("Item type: " + item.Type);
             _logger.Info("Scrobbling mediainfo: " + _json.SerializeToString(item));
             if (item.IsMovie == true || item.Type == "Movie")
             {
@@ -101,18 +101,10 @@ namespace Simkl.Api
                 history.shows.Add(new SimklShow(item));
             }
             _logger.Info("POSTing " + _json.SerializeToString(history));
-            try
-            {
-                SyncHistoryResponse r = await SyncHistoryAsync(history, userToken);
-                _logger.Debug("Response: " + _json.SerializeToString(r));
-                return history.movies.Count == r.added.movies && history.shows.Count == r.added.shows;
-            }
-            catch (MediaBrowser.Model.Net.HttpException e) when (e.StatusCode == System.Net.HttpStatusCode.Unauthorized)
-            {
-                _logger.Error("Invalid user token " + userToken + ", deleting");
-                Plugin.Instance.Configuration.deleteUserToken(userToken);
-                return false;
-            }
+            
+            SyncHistoryResponse r = await SyncHistoryAsync(history, userToken);
+            _logger.Debug("Response: " + _json.SerializeToString(r));
+            return history.movies.Count == r.added.movies && history.shows.Count == r.added.shows;
         }
 
         /// <summary>
@@ -123,7 +115,13 @@ namespace Simkl.Api
         /// <returns></returns>
         public async Task<SyncHistoryResponse> SyncHistoryAsync(SimklHistory history, string userToken)
         {
-            return _json.DeserializeFromStream<SyncHistoryResponse>(await _post("/sync/history", userToken, history));
+            try {
+                return _json.DeserializeFromStream<SyncHistoryResponse>(await _post("/sync/history", userToken, history));
+            } catch (MediaBrowser.Model.Net.HttpException e) when (e.StatusCode == System.Net.HttpStatusCode.Unauthorized) {
+                _logger.Error("Invalid user token " + userToken + ", deleting");
+                Plugin.Instance.Configuration.deleteUserToken(userToken);
+                throw new InvalidTokenException("Invalid user token " + userToken);
+            }
         }
 
         /// <summary>

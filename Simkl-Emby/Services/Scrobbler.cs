@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq; 
 
 using Simkl.Api;
+using Simkl.Api.Exceptions;
 
 using MediaBrowser.Controller.Plugins;
 using MediaBrowser.Controller.Session;
@@ -48,6 +49,7 @@ namespace Simkl.Services
         public void Dispose()
         {
             _sessionManager.PlaybackProgress -= embyPlaybackProgress;
+            _api = null;
         }
 
         public static bool canBeScrobbled(UserConfig config, SessionInfo session) {
@@ -77,34 +79,41 @@ namespace Simkl.Services
         
         private async void embyPlaybackProgress(object sessions, PlaybackProgressEventArgs e)
         {
-            UserConfig userConfig = Plugin.Instance.PluginConfiguration.getByGuid(e.Session.UserId);
-            if (userConfig is null || userConfig.userToken == "")
-            {
-                _logger.Error("Can't scrobble: User " + e.Session.UserName + " not logged in");
-                return;
-            }
-
-            if (!canBeScrobbled(userConfig, e.Session)) return;
-
-            string uid = e.Session.UserId, npid = e.Session.NowPlayingItem.Id;
-            if (lastScrobbled.ContainsKey(uid) && lastScrobbled[uid] == npid) {
-                _logger.Debug("Alredy scrobbled {0} for {1}", e.Session.NowPlayingItem.Name, e.Session.UserName);
-                return;
-            }
-
-            _logger.Info("Trying to scrobble {0} ({1}) for {2} ({3})", 
-                e.Session.NowPlayingItem.Name, e.Session.NowPlayingItem.Id,
-                e.Session.UserName, e.Session.UserId);
-
-            if(await _api.markAsWatched(e.MediaInfo, userConfig.userToken)) {
-                _logger.Debug("Scrobbled without errors");
-                lastScrobbled[e.Session.UserId] = e.Session.NowPlayingItem.Id;
-
-                if (canSendNotification(e.Session.FullNowPlayingItem)) {
-                    await _notifications.SendNotification(
-                        SimklNotificationsFactory.GetNotificationRequest(e.Session.FullNowPlayingItem, e.Session.UserInternalId),
-                        e.Session.FullNowPlayingItem, CancellationToken.None);
+            try {
+                UserConfig userConfig = Plugin.Instance.PluginConfiguration.getByGuid(e.Session.UserId);
+                if (userConfig == null || userConfig.userToken == "")
+                {
+                    _logger.Error("Can't scrobble: User " + e.Session.UserName + " not logged in (" + (userConfig == null) + ")");
+                    return;
                 }
+
+                if (!canBeScrobbled(userConfig, e.Session)) return;
+
+                string uid = e.Session.UserId, npid = e.Session.NowPlayingItem.Id;
+                if (lastScrobbled.ContainsKey(uid) && lastScrobbled[uid] == npid) {
+                    _logger.Debug("Alredy scrobbled {0} for {1}", e.Session.NowPlayingItem.Name, e.Session.UserName);
+                    return;
+                }
+
+                _logger.Info("Trying to scrobble {0} ({1}) for {2} ({3})", 
+                    e.Session.NowPlayingItem.Name, e.Session.NowPlayingItem.Id,
+                    e.Session.UserName, e.Session.UserId);
+
+                if(await _api.markAsWatched(e.MediaInfo, userConfig.userToken)) {
+                    _logger.Debug("Scrobbled without errors");
+                    lastScrobbled[e.Session.UserId] = e.Session.NowPlayingItem.Id;
+
+                    if (canSendNotification(e.Session.FullNowPlayingItem)) {
+                        await _notifications.SendNotification(
+                            SimklNotificationsFactory.GetNotificationRequest(e.Session.FullNowPlayingItem, e.Session.UserInternalId),
+                            e.Session.FullNowPlayingItem, CancellationToken.None);
+                    }
+                }
+            } catch (InvalidTokenException) {
+                _logger.Info("Deleted user token");
+            } catch (Exception ex) {
+                _logger.Error("Caught unknown exception while trying to scrobble: " + ex.Message);
+                _logger.Error(ex.StackTrace);
             }
         }
 

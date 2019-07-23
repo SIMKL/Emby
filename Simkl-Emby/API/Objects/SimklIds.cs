@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 namespace Simkl.Api.Objects {
     public class SimklIds {
-        public int simkl { get; set; }
-        public int imdb { get; set; }
+        public int? simkl { get; set; }
+        public string imdb { get; set; }
         public string slug { get; set; }
 
         /// <summary>

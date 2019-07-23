@@ -22,8 +22,8 @@ namespace Simkl.Api
         private readonly IHttpClient _httpClient;
 
         /* BASIC API THINGS */
-        // public const string BASE_URL = @"https://api.simkl.com";
-        public const string BASE_URL = @"http://private-9c39b-simkl.apiary-proxy.com";
+        public const string BASE_URL = @"https://api.simkl.com";
+        // public const string BASE_URL = @"http://private-9c39b-simkl.apiary-proxy.com";
 
         public const string REDIRECT_URI = @"https://ddavo.me/redirected?from=EmbySimkl";
         public const string APIKEY = @"27dd5d6adc24aa1ad9f95ef913244cbaf6df5696036af577ed41670473dc97d0";

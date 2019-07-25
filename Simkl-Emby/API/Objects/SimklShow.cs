@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Simkl.Api.Objects
 {
-    public class SimklShow: MediaObject
+    public class SimklShow: SimklMediaObject
     {
         public string title { get; set; }
         public int? year { get; set; }

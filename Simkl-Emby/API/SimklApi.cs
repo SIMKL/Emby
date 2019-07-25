@@ -39,7 +39,8 @@ namespace Simkl.Api
                 LogResponse = true,
                 LogResponseHeaders = true,
                 LogErrorResponseBody = true,
-                EnableDefaultUserAgent = true
+                EnableDefaultUserAgent = true,
+                TimeoutMs = 30000
             };
             options.RequestHeaders.Add("simkl-api-key", APIKEY);
             // options.RequestHeaders.Add("Content-Type", "application/json");
@@ -82,28 +83,52 @@ namespace Simkl.Api
             }
         }
 
-        public async Task<MediaObject> getFromFile(string filename) {
-            return _json.DeserializeFromStream<MediaObject>(await _post("/search/file/"));
+        public async Task<SimklMediaObject> getFromFile(string filename) {
+            SimklFile f = new SimklFile {file = filename};
+            StreamReader r = new StreamReader(await _post("/search/file/", null, f));
+            string t = r.ReadToEnd();
+            return _json.DeserializeFromString<SimklMediaObject>(t);
+        }
+
+        private static SimklHistory createHistory(BaseItemDto item) {
+            SimklHistory history = new SimklHistory();
+
+            if (item.IsMovie == true || item.Type == "Movie") {
+                history.movies.Add(new SimklMovie(item));
+            } else if (item.IsSeries == true || item.Type == "Episode") {
+                // TODO: TV Shows scrobbling (WIP)
+                history.shows.Add(new SimklShow(item));
+            }
+
+            return history;
         }
 
         /* NOW EVERYTHING RELATED TO SCROBBLING */
         public async Task<bool> markAsWatched(BaseItemDto item, string userToken)
         {
-            SimklHistory history = new SimklHistory();
-            _logger.Info("Scrobbling mediainfo: " + _json.SerializeToString(item));
-            if (item.IsMovie == true || item.Type == "Movie")
-            {
-                history.movies.Add(new SimklMovie(item));
-            }
-            else if (item.IsSeries == true || item.Type == "Episode")
-            {
-                // TODO: TV Shows scrobbling (WIP)
-                history.shows.Add(new SimklShow(item));
-            }
+            SimklHistory history = createHistory(item);            
             _logger.Info("POSTing " + _json.SerializeToString(history));
             
             SyncHistoryResponse r = await SyncHistoryAsync(history, userToken);
             _logger.Debug("Response: " + _json.SerializeToString(r));
+            if (history.movies.Count == r.added.movies && history.shows.Count == r.added.shows) return true;
+
+            // If we are here, is because the item has not been found
+            // let's try scrobbling from filename
+            SimklMediaObject mo = await getFromFile(item.Path);
+            _logger.Debug("FromFile " + item.Path);
+            _logger.Debug(_json.SerializeToString(mo));
+            history = new SimklHistory();
+            if (item.IsMovie == true || item.Type == "Movie") {
+                history.movies.Add(mo as SimklMovie);
+            } else if (item.IsSeries == true || item.Type == "Episode") {
+                history.shows.Add(mo as SimklShow);
+            }
+
+            _logger.Info("POSTing" + _json.SerializeToString(history));
+            r = await SyncHistoryAsync(history, userToken);
+            _logger.Debug("Response: " + _json.SerializeToString(r));
+
             return history.movies.Count == r.added.movies && history.shows.Count == r.added.shows;
         }
 

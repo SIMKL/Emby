@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq; 
 
 using Simkl.Api;
+using Simkl.Api.Objects;
 using Simkl.Api.Exceptions;
 
 using MediaBrowser.Controller.Plugins;
@@ -28,6 +29,7 @@ namespace Simkl.Services
         private readonly INotificationManager _notifications;
         private SimklApi _api;
         private Dictionary<string, string> lastScrobbled;   // Library ID of last scrobbled item
+        private DateTime nextTry;
 
         // public static Scrobbler Instance; Instance = this
         public Scrobbler(IJsonSerializer json, ISessionManager sessionManager, ILogManager logManager,
@@ -39,6 +41,7 @@ namespace Simkl.Services
             _notifications = notifications;
             _api = new SimklApi(json, _logger, httpClient);
             lastScrobbled = new Dictionary<string,string>();
+            nextTry = DateTime.UtcNow;
         }
 
         public void Run()
@@ -80,6 +83,9 @@ namespace Simkl.Services
         private async void embyPlaybackProgress(object sessions, PlaybackProgressEventArgs e)
         {
             try {
+                if (DateTime.UtcNow < nextTry) return;
+                nextTry = DateTime.UtcNow.AddSeconds(30);
+                
                 UserConfig userConfig = Plugin.Instance.PluginConfiguration.getByGuid(e.Session.UserId);
                 if (userConfig == null || userConfig.userToken == "")
                 {

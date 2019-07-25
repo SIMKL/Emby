@@ -3,7 +3,7 @@ using MediaBrowser.Model.Dto;
 
 namespace Simkl.Api.Objects
 {
-    public class SimklMovie: MediaObject
+    public class SimklMovie: SimklMediaObject
     {
         public string title { get; set; }
         public int? year { get; set; }

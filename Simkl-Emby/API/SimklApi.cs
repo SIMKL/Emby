@@ -83,11 +83,12 @@ namespace Simkl.Api
             }
         }
 
-        public async Task<SimklMediaObject> getFromFile(string filename) {
+        public async Task<SearchFileResponse> getFromFile(string filename) {
             SimklFile f = new SimklFile {file = filename};
             StreamReader r = new StreamReader(await _post("/search/file/", null, f));
             string t = r.ReadToEnd();
-            return _json.DeserializeFromString<SimklMediaObject>(t);
+            _logger.Debug(t);
+            return _json.DeserializeFromString<SearchFileResponse>(t);
         }
 
         private static SimklHistory createHistory(BaseItemDto item) {
@@ -115,14 +116,17 @@ namespace Simkl.Api
 
             // If we are here, is because the item has not been found
             // let's try scrobbling from filename
-            SimklMediaObject mo = await getFromFile(item.Path);
+            SearchFileResponse mo = await getFromFile(item.Path);
             _logger.Debug("FromFile " + item.Path);
             _logger.Debug(_json.SerializeToString(mo));
             history = new SimklHistory();
+            // TODO: Edit BaseItemDto so the notification is right
             if (item.IsMovie == true || item.Type == "Movie") {
-                history.movies.Add(mo as SimklMovie);
+                if (mo.type != "movie") throw new InvalidDataException("type != movie (" + mo.type + ")");
+                history.movies.Add(mo.movie);
             } else if (item.IsSeries == true || item.Type == "Episode") {
-                history.shows.Add(mo as SimklShow);
+                if (mo.type != "episode") throw new InvalidDataException("type != episode (" + mo.type + ")");
+                history.episodes.Add(mo.episode);
             }
 
             _logger.Info("POSTing" + _json.SerializeToString(history));

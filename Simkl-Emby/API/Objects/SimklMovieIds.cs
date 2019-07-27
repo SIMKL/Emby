@@ -9,6 +9,7 @@ namespace Simkl.Api.Objects
         public int? anidb { get; set; }
         public int? hulu { get; set; }
         public int? crunchyroll { get; set; }
+        public string moviedb { get; set; }
 
         public SimklMovieIds (Dictionary<string, string> providerMovieIds) : base(providerMovieIds) {}
     }

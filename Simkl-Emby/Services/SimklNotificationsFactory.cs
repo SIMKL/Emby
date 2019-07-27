@@ -41,12 +41,9 @@ namespace Simkl.Services {
 
             // TODO: Set url parameter to simkl's movie url
             if (item is Movie) {
-                int ? year = item.ProductionYear;
-
                 nr.NotificationType = NOTIFICATION_MOVIE_TYPE;
                 nr.Name = "Movie Scrobbled to Simkl";
                 nr.Description = "The movie " + item.Name;
-                if (year != null) nr.Description += " (" + year + ")";
                 nr.Description += " has been scrobbled to your account";
             }
 

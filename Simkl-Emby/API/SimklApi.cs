@@ -105,14 +105,14 @@ namespace Simkl.Api
         }
 
         /* NOW EVERYTHING RELATED TO SCROBBLING */
-        public async Task<bool> markAsWatched(BaseItemDto item, string userToken)
+        public async Task<Tuple<bool, BaseItemDto>> markAsWatched(BaseItemDto item, string userToken)
         {
             SimklHistory history = createHistory(item);            
             _logger.Info("POSTing " + _json.SerializeToString(history));
             
             SyncHistoryResponse r = await SyncHistoryAsync(history, userToken);
             _logger.Debug("Response: " + _json.SerializeToString(r));
-            if (history.movies.Count == r.added.movies && history.shows.Count == r.added.shows) return true;
+            if (history.movies.Count == r.added.movies && history.shows.Count == r.added.shows) return new Tuple<bool, BaseItemDto>(true, item);
 
             // If we are here, is because the item has not been found
             // let's try scrobbling from filename
@@ -123,9 +123,16 @@ namespace Simkl.Api
             // TODO: Edit BaseItemDto so the notification is right
             if (item.IsMovie == true || item.Type == "Movie") {
                 if (mo.type != "movie") throw new InvalidDataException("type != movie (" + mo.type + ")");
+                item.Name = mo.movie.title;
+                item.ProductionYear = mo.movie.year;
                 history.movies.Add(mo.movie);
             } else if (item.IsSeries == true || item.Type == "Episode") {
                 if (mo.type != "episode") throw new InvalidDataException("type != episode (" + mo.type + ")");
+                item.Name = mo.episode.title;
+                item.SeriesName = mo.show.title;
+                item.IndexNumber = mo.episode.episode;
+                item.ParentIndexNumber = mo.episode.season;
+                item.ProductionYear = mo.show.year;
                 history.episodes.Add(mo.episode);
             }
 
@@ -133,7 +140,7 @@ namespace Simkl.Api
             r = await SyncHistoryAsync(history, userToken);
             _logger.Debug("Response: " + _json.SerializeToString(r));
 
-            return history.movies.Count == r.added.movies && history.shows.Count == r.added.shows;
+            return new Tuple<bool,BaseItemDto>(history.movies.Count == r.added.movies && history.shows.Count == r.added.shows, item);
         }
 
         /// <summary>

@@ -7,5 +7,6 @@ namespace Simkl.Api.Responses {
 
         public SimklEpisode episode { get; set; }
         public SimklMovie movie { get; set; }
+        public SimklShow show { get; set; }
     }
 }

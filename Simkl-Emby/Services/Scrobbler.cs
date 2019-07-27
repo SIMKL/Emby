@@ -17,6 +17,7 @@ using MediaBrowser.Model.Serialization;
 using MediaBrowser.Controller.Notifications;
 using MediaBrowser.Common.Net;
 using MediaBrowser.Controller.Library;
+using MediaBrowser.Model.Dto;
 using Simkl.Configuration;
 
 namespace Simkl.Services
@@ -70,11 +71,11 @@ namespace Simkl.Services
             return false;
         }
 
-        private bool canSendNotification(BaseItem item) {
-            if (item is Movie)
+        private bool canSendNotification(BaseItemDto item) {
+            if (item.IsMovie == true || item.Type == "Movie")
                 return _notifications.GetNotificationTypes().Any(t => t.Type == SimklNotificationsFactory.NOTIFICATION_MOVIE_TYPE && t.Enabled);
             
-            if (item is Episode)
+            if (item.IsSeries == true || item.Type == "Episode")
                 return _notifications.GetNotificationTypes().Any(t => t.Type == SimklNotificationsFactory.NOTIFICATION_SHOW_TYPE && t.Enabled);
 
             return false;
@@ -101,17 +102,19 @@ namespace Simkl.Services
                     return;
                 }
 
+                _logger.Debug(_json.SerializeToString(e.Session.NowPlayingItem));
                 _logger.Info("Trying to scrobble {0} ({1}) for {2} ({3})", 
                     e.Session.NowPlayingItem.Name, e.Session.NowPlayingItem.Id,
                     e.Session.UserName, e.Session.UserId);
 
-                if(await _api.markAsWatched(e.MediaInfo, userConfig.userToken)) {
+                Tuple<bool, BaseItemDto> response = await _api.markAsWatched(e.MediaInfo, userConfig.userToken);
+                if(response.Item1) {
                     _logger.Debug("Scrobbled without errors");
                     lastScrobbled[e.Session.UserId] = e.Session.NowPlayingItem.Id;
 
-                    if (canSendNotification(e.Session.FullNowPlayingItem)) {
+                    if (canSendNotification(response.Item2)) {
                         await _notifications.SendNotification(
-                            SimklNotificationsFactory.GetNotificationRequest(e.Session.FullNowPlayingItem, e.Session.UserInternalId),
+                            SimklNotificationsFactory.GetNotificationRequest(response.Item2, e.Session.UserInternalId),
                             e.Session.FullNowPlayingItem, CancellationToken.None);
                     }
                 }

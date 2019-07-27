@@ -107,14 +107,14 @@ namespace Simkl.Services
                     e.Session.NowPlayingItem.Name, e.Session.NowPlayingItem.Id,
                     e.Session.UserName, e.Session.UserId);
 
-                Tuple<bool, BaseItemDto> response = await _api.markAsWatched(e.MediaInfo, userConfig.userToken);
-                if(response.Item1) {
+                var response = await _api.markAsWatched(e.MediaInfo, userConfig.userToken);
+                if(response.success) {
                     _logger.Debug("Scrobbled without errors");
-                    lastScrobbled[e.Session.UserId] = e.Session.NowPlayingItem.Id;
+                    lastScrobbled[e.PlaySessionId] = e.Session.NowPlayingItem.Id;
 
-                    if (canSendNotification(response.Item2)) {
+                    if (canSendNotification(response.item)) {
                         await _notifications.SendNotification(
-                            SimklNotificationsFactory.GetNotificationRequest(response.Item2, e.Session.UserInternalId),
+                            SimklNotificationsFactory.GetNotificationRequest(response.item, e.Session.UserInternalId),
                             e.Session.FullNowPlayingItem, CancellationToken.None);
                     }
                 }

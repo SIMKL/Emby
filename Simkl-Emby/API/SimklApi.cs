@@ -105,14 +105,14 @@ namespace Simkl.Api
         }
 
         /* NOW EVERYTHING RELATED TO SCROBBLING */
-        public async Task<Tuple<bool, BaseItemDto>> markAsWatched(BaseItemDto item, string userToken)
+        public async Task<(bool success, BaseItemDto item)> markAsWatched(BaseItemDto item, string userToken)
         {
             SimklHistory history = createHistory(item);            
             _logger.Info("POSTing " + _json.SerializeToString(history));
             
             SyncHistoryResponse r = await SyncHistoryAsync(history, userToken);
             _logger.Debug("Response: " + _json.SerializeToString(r));
-            if (history.movies.Count == r.added.movies && history.shows.Count == r.added.shows) return new Tuple<bool, BaseItemDto>(true, item);
+            if (history.movies.Count == r.added.movies && history.shows.Count == r.added.shows) return (true, item);
 
             // If we are here, is because the item has not been found
             // let's try scrobbling from filename
@@ -140,7 +140,7 @@ namespace Simkl.Api
             r = await SyncHistoryAsync(history, userToken);
             _logger.Debug("Response: " + _json.SerializeToString(r));
 
-            return new Tuple<bool,BaseItemDto>(history.movies.Count == r.added.movies && history.shows.Count == r.added.shows, item);
+            return (history.movies.Count == r.added.movies && history.shows.Count == r.added.shows, item);
         }
 
         /// <summary>

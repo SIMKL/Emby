@@ -29,6 +29,11 @@ You should now see your `Name` from Simkl there and `Scrobbling options` with ch
 2. There, on section "Simkl Scrobbling", enable both notifications
 
 ## Current features
+- Multi-user support
+- Auto scrobble Movies and TV Shows at given percentage to Simkl
+- Easy login using pin (no more putting passwords with the TV remote)
+- If scrobbling fails, search it using filename using Simkl's API and then scrobble it
+- Send notifications about scrobbling
 
 ## TODO
 - [x] Auto-build for manual installing

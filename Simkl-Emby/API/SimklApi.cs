@@ -88,11 +88,11 @@ namespace Simkl.Api
             _logger.Info("Posting: " + _json.SerializeToString(f));
             StreamReader r = new StreamReader(await _post("/search/file/", null, f));
             string t = r.ReadToEnd();
-            _logger.Debug(t);
+            _logger.Debug("Response: " + t);
             return _json.DeserializeFromString<SearchFileResponse>(t);
         }
 
-        private static SimklHistory createHistory(BaseItemDto item) {
+        private static SimklHistory createHistoryFromItem(BaseItemDto item) {
             SimklHistory history = new SimklHistory();
 
             if (item.IsMovie == true || item.Type == "Movie") {
@@ -105,23 +105,11 @@ namespace Simkl.Api
             return history;
         }
 
-        /* NOW EVERYTHING RELATED TO SCROBBLING */
-        public async Task<(bool success, BaseItemDto item)> markAsWatched(BaseItemDto item, string userToken)
-        {
-            SimklHistory history = createHistory(item);            
-            _logger.Info("POSTing " + _json.SerializeToString(history));
-            
-            SyncHistoryResponse r = await SyncHistoryAsync(history, userToken);
-            _logger.Debug("Response: " + _json.SerializeToString(r));
-            if (history.movies.Count == r.added.movies && history.shows.Count == r.added.shows) return (true, item);
+        public async Task<(SimklHistory history, BaseItemDto item)> getHistoryFromFileName(BaseItemDto item, bool fullpath = true) {
+            string fname = fullpath?item.Path:Path.GetFileName(item.Path);
+            SearchFileResponse mo = await getFromFile(fname);
 
-            // If we are here, is because the item has not been found
-            // let's try scrobbling from filename
-            SearchFileResponse mo = await getFromFile(item.Path);
-            _logger.Debug("FromFile " + item.Path);
-            _logger.Debug(_json.SerializeToString(mo));
-            history = new SimklHistory();
-            // TODO: Edit BaseItemDto so the notification is right
+            SimklHistory history = new SimklHistory();
             if (item.IsMovie == true || item.Type == "Movie") {
                 if (mo.type != "movie") throw new InvalidDataException("type != movie (" + mo.type + ")");
                 item.Name = mo.movie.title;
@@ -137,7 +125,27 @@ namespace Simkl.Api
                 history.episodes.Add(mo.episode);
             }
 
-            _logger.Info("POSTing" + _json.SerializeToString(history));
+            return (history, item);
+        }
+
+        /* NOW EVERYTHING RELATED TO SCROBBLING */
+        public async Task<(bool success, BaseItemDto item)> markAsWatched(BaseItemDto item, string userToken)
+        {
+            SimklHistory history = createHistoryFromItem(item);
+            SyncHistoryResponse r = await SyncHistoryAsync(history, userToken);
+            _logger.Debug("Response: " + _json.SerializeToString(r));
+            if (history.movies.Count == r.added.movies && history.shows.Count == r.added.shows) return (true, item);
+
+            // If we are here, is because the item has not been found
+            // let's try scrobbling from full path
+            try {
+                (history, item) = await getHistoryFromFileName(item, true);
+            } catch (InvalidDataException) {
+                // Let's try again but this time using only the FILE name
+                _logger.Debug("Couldn't scrobble using full path, trying using only filename");
+                (history, item) = await getHistoryFromFileName(item, false);
+            }
+
             r = await SyncHistoryAsync(history, userToken);
             _logger.Debug("Response: " + _json.SerializeToString(r));
 
@@ -153,6 +161,7 @@ namespace Simkl.Api
         public async Task<SyncHistoryResponse> SyncHistoryAsync(SimklHistory history, string userToken)
         {
             try {
+                _logger.Info("Syncing History: " + _json.SerializeToString(history));
                 return _json.DeserializeFromStream<SyncHistoryResponse>(await _post("/sync/history", userToken, history));
             } catch (MediaBrowser.Model.Net.HttpException e) when (e.StatusCode == System.Net.HttpStatusCode.Unauthorized) {
                 _logger.Error("Invalid user token " + userToken + ", deleting");

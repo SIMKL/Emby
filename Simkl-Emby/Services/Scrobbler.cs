@@ -103,9 +103,10 @@ namespace Simkl.Services
                 }
 
                 _logger.Debug(_json.SerializeToString(e.Session.NowPlayingItem));
-                _logger.Info("Trying to scrobble {0} ({1}) for {2} ({3})", 
+                _logger.Info("Trying to scrobble {0} ({1}) for {2} ({3}) - {4}", 
                     e.Session.NowPlayingItem.Name, e.Session.NowPlayingItem.Id,
-                    e.Session.UserName, e.Session.UserId);
+                    e.Session.UserName, e.Session.UserId,
+                    e.Session.NowPlayingItem.Path);
 
                 var response = await _api.markAsWatched(e.MediaInfo, userConfig.userToken);
                 if(response.success) {

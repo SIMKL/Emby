@@ -85,6 +85,7 @@ namespace Simkl.Api
 
         public async Task<SearchFileResponse> getFromFile(string filename) {
             SimklFile f = new SimklFile {file = filename};
+            _logger.Info("Posting: " + _json.SerializeToString(f));
             StreamReader r = new StreamReader(await _post("/search/file/", null, f));
             string t = r.ReadToEnd();
             _logger.Debug(t);

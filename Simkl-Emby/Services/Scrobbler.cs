@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Threading;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq; 
 
 using Simkl.Api;
-using Simkl.Api.Objects;
 using Simkl.Api.Exceptions;
 
 using MediaBrowser.Controller.Plugins;
@@ -83,11 +83,12 @@ namespace Simkl.Services
         
         private async void embyPlaybackProgress(object sessions, PlaybackProgressEventArgs e)
         {
+            string sid = e.PlaySessionId, uid = e.Session.UserId, npid = e.Session.NowPlayingItem.Id;
             try {
                 if (DateTime.UtcNow < nextTry) return;
                 nextTry = DateTime.UtcNow.AddSeconds(30);
                 
-                UserConfig userConfig = Plugin.Instance.PluginConfiguration.getByGuid(e.Session.UserId);
+                UserConfig userConfig = Plugin.Instance.PluginConfiguration.getByGuid(uid);
                 if (userConfig == null || userConfig.userToken == "")
                 {
                     _logger.Error("Can't scrobble: User " + e.Session.UserName + " not logged in (" + (userConfig == null) + ")");
@@ -96,7 +97,6 @@ namespace Simkl.Services
 
                 if (!canBeScrobbled(userConfig, e.Session)) return;
 
-                string sid = e.PlaySessionId, uid = e.Session.UserId, npid = e.Session.NowPlayingItem.Id;
                 if (lastScrobbled.ContainsKey(sid) && lastScrobbled[sid] == npid) {
                     _logger.Debug("Alredy scrobbled {0} for {1}", e.Session.NowPlayingItem.Name, e.Session.UserName);
                     return;
@@ -111,7 +111,7 @@ namespace Simkl.Services
                 var response = await _api.markAsWatched(e.MediaInfo, userConfig.userToken);
                 if(response.success) {
                     _logger.Debug("Scrobbled without errors");
-                    lastScrobbled[e.PlaySessionId] = e.Session.NowPlayingItem.Id;
+                    lastScrobbled[sid] = npid;
 
                     if (canSendNotification(response.item)) {
                         await _notifications.SendNotification(
@@ -121,6 +121,9 @@ namespace Simkl.Services
                 }
             } catch (InvalidTokenException) {
                 _logger.Info("Deleted user token");
+            } catch (InvalidDataException ex) {
+                _logger.Error("Couldn't scrobble: " + ex.Message);
+                lastScrobbled[sid] = npid;
             } catch (Exception ex) {
                 _logger.Error("Caught unknown exception while trying to scrobble: " + ex.Message);
                 _logger.Error(ex.StackTrace);

@@ -96,17 +96,17 @@ namespace Simkl.Services
 
                 if (!canBeScrobbled(userConfig, e.Session)) return;
 
-                string uid = e.Session.UserId, npid = e.Session.NowPlayingItem.Id;
-                if (lastScrobbled.ContainsKey(uid) && lastScrobbled[uid] == npid) {
+                string sid = e.PlaySessionId, uid = e.Session.UserId, npid = e.Session.NowPlayingItem.Id;
+                if (lastScrobbled.ContainsKey(sid) && lastScrobbled[sid] == npid) {
                     _logger.Debug("Alredy scrobbled {0} for {1}", e.Session.NowPlayingItem.Name, e.Session.UserName);
                     return;
                 }
 
                 _logger.Debug(_json.SerializeToString(e.Session.NowPlayingItem));
-                _logger.Info("Trying to scrobble {0} ({1}) for {2} ({3}) - {4}", 
-                    e.Session.NowPlayingItem.Name, e.Session.NowPlayingItem.Id,
-                    e.Session.UserName, e.Session.UserId,
-                    e.Session.NowPlayingItem.Path);
+                _logger.Info("Trying to scrobble {0} ({1}) for {2} ({3}) - {4} on {5}", 
+                    e.Session.NowPlayingItem.Name, npid,
+                    e.Session.UserName, uid,
+                    e.Session.NowPlayingItem.Path, sid);
 
                 var response = await _api.markAsWatched(e.MediaInfo, userConfig.userToken);
                 if(response.success) {

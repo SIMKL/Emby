@@ -25,7 +25,7 @@ namespace Simkl.Api
         public const string BASE_URL = @"https://api.simkl.com";
         // public const string BASE_URL = @"http://private-9c39b-simkl.apiary-proxy.com";
 
-        public const string REDIRECT_URI = @"https://ddavo.me/redirected?from=EmbySimkl";
+        public const string REDIRECT_URI = @"https://simkl.com/apps/emby/connected/";
         public const string APIKEY = @"27dd5d6adc24aa1ad9f95ef913244cbaf6df5696036af577ed41670473dc97d0";
         public const string SECRET = @"d7b9feb9d48bbaa69dbabaca21ba4671acaa89198637e9e136a4d69ec97ab68b";
 

@@ -12,10 +12,12 @@
     <RepositoryType>git</RepositoryType>
 
     <Deterministic>false</Deterministic>
+
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="MediaBrowser.Server.Core" Version="4.2.0.40" />
+    <PackageReference Include="MediaBrowser.Server.Core" Version="4.0.0.2" />
     <PackageReference Include="System.Memory" Version="4.5.3" />
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.5.0" />
   </ItemGroup>
@@ -37,12 +39,12 @@
   <!-- 'GitLab' for autobuild configurations -->
   <!-- 'Release' for release configurations -->
   <Target Condition="'$(Configuration)' == 'Debug'" Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Error Condition="'$(OS)' != Windows_NT And '$(OS)' != 'Unix'" Text="Unknown OS: $(OS)"/>
-    <Exec Condition="'$(OS)' == 'Windows_NT'" Command="xcopy &quot;$(TargetPath)&quot; &quot;%AppData%\Emby-Server\programdata\plugins&quot; /y&#xD;&#xA;tasklist /FI &quot;IMAGENAME eq EmbyServer.exe&quot; 2&gt;NUL | findstr &quot;EmbyServer.exe&quot;&gt;NUL&#xD;&#xA;if &quot;%ERRORLEVEL%&quot;==&quot;0&quot; goto curlRestart&#xD;&#xA;explorer %appdata%\Emby-Server\system\EmbyServer.exe&#xD;&#xA;exit 0&#xD;&#xA;:curlRestart&#xD;&#xA;curl -f -X POST &quot;http://localhost:8096/emby/System/Restart&quot; -H &quot;accept: application/json&quot; -d &quot;&quot;" />
+    <Error Condition="'$(OS)' != Windows_NT And '$(OS)' != 'Unix'" Text="Unknown OS: $(OS)" />
+    <Exec Condition="'$(OS)' == 'Windows_NT'" Command="xcopy &quot;$(TargetPath)&quot; &quot;%25AppData%25\Emby-Server\programdata\plugins\&quot; /y&#xD;&#xA;tasklist /FI &quot;IMAGENAME eq EmbyServer.exe&quot; 2&gt;NUL | findstr &quot;EmbyServer.exe&quot;&gt;NUL&#xD;&#xA;if &quot;%25ERRORLEVEL%25&quot;==&quot;0&quot; goto curlRestart&#xD;&#xA;explorer %25appdata%25\Emby-Server\system\EmbyServer.exe&#xD;&#xA;exit 0&#xD;&#xA;:curlRestart&#xD;&#xA;curl -f -X POST &quot;http://localhost:8096/emby/System/Restart&quot; -H &quot;accept: application/json&quot; -d &quot;&quot;" />
     <!-- On Linux, remember to grant write permissions on the file /var/emby/plugins/Simkl.dll to the user -->
     <!-- Also remember to add a polkit rule to restart via systemctl (safer that web interface) -->
     <!-- https://serverfault.com/questions/841099/systemd-grant-an-unprivileged-user-permission-to-alter-one-specific-service -->
-    <Exec Condition="'$(OS)' == 'Unix'" Command="cp &quot;$(TargetPath)&quot; /var/lib/emby/plugins/ &amp;&amp; systemctl restart emby-server"/>
+    <Exec Condition="'$(OS)' == 'Unix'" Command="cp &quot;$(TargetPath)&quot; /var/lib/emby/plugins/ &amp;&amp; systemctl restart emby-server" />
   </Target>
 
 </Project>

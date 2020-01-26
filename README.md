@@ -2,8 +2,17 @@
 [![](https://img.shields.io/github/license/SIMKL/emby.svg?style=flat-square)][license]
 [![](https://img.shields.io/gitlab/pipeline/daviddavo/simkl-emby.svg?style=flat-square)](https://gitlab.com/daviddavo/simkl-emby/pipelines)
 
+## Install from Emby catalog automatically
+1. Open Emby server Configuration page
+2. In Advanced > Plugins click the Catalog tab
+3. Scroll down to General section where you will find Simkl TV Tracker plugin. 
+Short link: http://localhost:8096/web/index.html#!/plugins/plugincatalog.html
+4. Click install
+5. Restart Emby server
+6. Open plugin settings and click log in, click the PIN link (you should be automatically logged in) and come back to Emby. If you see a blank settings page at this point, refresh the page and then you'll be able to see your Simkl profile name which means you are logged in and can change the settings.
+
 ## Installing Manually (Lastest build)
-1. Download the lastest build [here](https://gitlab.com/daviddavo/simkl-emby/-/jobs/artifacts/master/raw/Simkl.dll?job=build)
+1. Download the lastest build of Simkl.dll [here](https://github.com/SIMKL/Emby/releases)
 2. Put the plugin on your server's plugin folder
    - On Linux (Arch): `/usr/lib/emby-server/plugins/`
    - On Windows: `%AppData%\Emby-Server\programdata\plugins\`

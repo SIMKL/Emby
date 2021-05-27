@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+    <FileVersion>1.0.1.0</FileVersion>
     <Authors>David Davó</Authors>
     <Company>Simkl</Company>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <NeutralLanguage>en-GB</NeutralLanguage>
     <RepositoryUrl>https://github.com/SIMKL/Emby</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -17,7 +17,7 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="MediaBrowser.Server.Core" Version="4.0.0.2" />
+    <PackageReference Include="MediaBrowser.Server.Core" Version="4.6.0.50" />
     <PackageReference Include="System.Memory" Version="4.5.3" />
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.5.0" />
   </ItemGroup>

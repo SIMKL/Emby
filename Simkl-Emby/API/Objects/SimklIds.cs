@@ -16,12 +16,16 @@ namespace Simkl.Api.Objects {
         public SimklIds (Dictionary<string, string> ProviderIds)
         {            
             foreach (KeyValuePair<string, string> id in ProviderIds) {
-                PropertyInfo prop = GetType().GetProperty(id.Key.ToLower());
-                if (prop.PropertyType == typeof(int?)) {
-                    prop.SetValue(this, int.Parse(id.Value));
-                } else if (prop.PropertyType == typeof(string)) {
-                    prop.SetValue(this, id.Value);
+                try{
+                    PropertyInfo prop = GetType().GetProperty(id.Key.ToLower());
+                    if (prop.PropertyType == typeof(int?)){
+                        prop.SetValue(this, int.Parse(id.Value));
+                    }
+                    else if (prop.PropertyType == typeof(string)){
+                        prop.SetValue(this, id.Value);
+                    }
                 }
+                catch (System.NullReferenceException e){}
             }
         }
     }

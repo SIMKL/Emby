@@ -97,9 +97,11 @@ namespace Simkl.Api
 
             if (item.IsMovie == true || item.Type == "Movie") {
                 history.movies.Add(new SimklMovie(item));
-            } else if (item.IsSeries == true || item.Type == "Episode") {
+            } else if (item.IsSeries == true || (item.Type == "Episode" && !item.ProviderIds.ContainsKey("Tvdb"))) {
                 // TODO: TV Shows scrobbling (WIP)
                 history.shows.Add(new SimklShow(item));
+            } else if (item.Type == "Episode"){
+                history.episodes.Add(new SimklEpisode(item));
             }
 
             return history;

@@ -1,4 +1,4 @@
-using MediaBrowser.Model.Notifications;
+/*using MediaBrowser.Model.Notifications;
 using MediaBrowser.Controller.Notifications;
 using MediaBrowser.Controller.Entities;
 
@@ -60,4 +60,4 @@ namespace Simkl.Services {
             return nr;
         }
     }
-}
+}*/

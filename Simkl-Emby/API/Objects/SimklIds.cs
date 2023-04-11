@@ -8,6 +8,7 @@ namespace Simkl.Api.Objects {
         public string slug { get; set; }
         public string netflix { get; set; }
         public string tmdb { get; set; }
+        public string tvdb { get; set; }
 
         /// <summary>
         /// Creates an MovieIds object given a dictionary

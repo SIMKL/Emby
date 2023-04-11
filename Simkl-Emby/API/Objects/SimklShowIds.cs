@@ -4,7 +4,6 @@ namespace Simkl.Api.Objects
 {
     public class SimklShowIds : SimklIds
     {
-        public int? tvdb { get; set; }
         public int? mal { get; set; }
         public int? anidb { get; set; }
         public int? hulu { get; set; }

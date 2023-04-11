@@ -27,19 +27,19 @@ namespace Simkl.Services
         private readonly ISessionManager _sessionManager;   // Needed to set up de startPlayBack and endPlayBack functions
         private readonly ILogger _logger;
         private readonly IJsonSerializer _json;
-        private readonly INotificationManager _notifications;
+        //private readonly INotificationManager _notifications;
         private SimklApi _api;
         private Dictionary<string, string> lastScrobbled;   // Library ID of last scrobbled item
         private DateTime nextTry;
 
         // public static Scrobbler Instance; Instance = this
         public Scrobbler(IJsonSerializer json, ISessionManager sessionManager, ILogManager logManager,
-            IHttpClient httpClient, INotificationManager notifications)
+            IHttpClient httpClient/*, INotificationManager notifications*/)
         {
             _json = json;
             _sessionManager = sessionManager;
             _logger = logManager.GetLogger("Simkl Scrobbler");
-            _notifications = notifications;
+         //   _notifications = notifications;
             _api = new SimklApi(json, _logger, httpClient);
             lastScrobbled = new Dictionary<string,string>();
             nextTry = DateTime.UtcNow;
@@ -71,7 +71,7 @@ namespace Simkl.Services
             return false;
         }
 
-        private bool canSendNotification(BaseItemDto item) {
+        /*private bool canSendNotification(BaseItemDto item) {
             if (item.IsMovie == true || item.Type == "Movie")
                 return _notifications.GetNotificationTypes().Any(t => t.Type == SimklNotificationsFactory.NOTIFICATION_MOVIE_TYPE && t.Enabled);
             
@@ -79,7 +79,7 @@ namespace Simkl.Services
                 return _notifications.GetNotificationTypes().Any(t => t.Type == SimklNotificationsFactory.NOTIFICATION_SHOW_TYPE && t.Enabled);
 
             return false;
-        }
+        }*/
         
         private async void embyPlaybackProgress(object sessions, PlaybackProgressEventArgs e)
         {
@@ -108,16 +108,17 @@ namespace Simkl.Services
                     e.Session.UserName, uid,
                     e.Session.NowPlayingItem.Path, sid);
 
+                _logger.Debug("Item: " + _json.SerializeToString(e.MediaInfo));
                 var response = await _api.markAsWatched(e.MediaInfo, userConfig.userToken);
                 if(response.success) {
                     _logger.Debug("Scrobbled without errors");
                     lastScrobbled[sid] = npid;
 
-                    if (canSendNotification(response.item)) {
+                  /*  if (canSendNotification(response.item)) {
                         await _notifications.SendNotification(
                             SimklNotificationsFactory.GetNotificationRequest(response.item, e.Session.UserInternalId),
                             e.Session.FullNowPlayingItem, CancellationToken.None);
-                    }
+                    }*/
                 }
             } catch (InvalidTokenException) {
                 _logger.Info("Deleted user token");

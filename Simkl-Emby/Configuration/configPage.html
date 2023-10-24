@@ -197,7 +197,7 @@
 
             var SimklAPI = {
                 getCode: function () {
-                    var uri = "/Simkl/oauth/pin";
+                    var uri = "/Simkl/oauth/pin?api_key=" + ApiClient.accessToken();
                     var request = new XMLHttpRequest();
                     request.open("GET", uri, false);
                     request.send();
@@ -211,7 +211,7 @@
                     }
                 },
                 checkCode : function (user_code) {
-                    var uri = "/Simkl/oauth/pin/" + user_code;
+                    var uri = "/Simkl/oauth/pin/" + user_code + "?api_key=" + ApiClient.accessToken();
                     var request = new XMLHttpRequest();
                     request.open("GET", uri, false);
                     request.send();
@@ -225,7 +225,7 @@
                     }
                 },
                 getUserSettings: function (secret) {
-                    var uri = "/Simkl/users/settings/" + secret;
+                    var uri = "/Simkl/users/settings/" + secret + "?api_key=" + ApiClient.accessToken();
                     var request = new XMLHttpRequest();
                     request.open("GET", uri, false);
                     request.send();
@@ -245,6 +245,7 @@
                     ApiClient.getUsers().then(SimklConfig.populateUsers),
                     ApiClient.getPluginConfiguration(SimklConfig.guid).then(SimklConfig.loadConfig.bind(SimklConfig, ApiClient.getCurrentUserId()))]);
                 Dashboard.hideLoadingMsg();
+
             });
 
             $("#SimklConfigurationForm").on("submit", function(e) {

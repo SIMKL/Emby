@@ -83,51 +83,66 @@ namespace Simkl.Services
         
         private async void embyPlaybackProgress(object sessions, PlaybackProgressEventArgs e)
         {
-            string sid = e.PlaySessionId, uid = e.Session.UserId, npid = e.Session.NowPlayingItem.Id;
-            try {
-                if (DateTime.UtcNow < nextTry) return;
-                nextTry = DateTime.UtcNow.AddSeconds(30);
-                
-                UserConfig userConfig = Plugin.Instance.PluginConfiguration.getByGuid(uid);
-                if (userConfig == null || userConfig.userToken == "")
+            try{
+                string sid = e.PlaySessionId, uid = e.Session.UserId, npid = e.Session.NowPlayingItem.Id;
+                try
                 {
-                    _logger.Error("Can't scrobble: User " + e.Session.UserName + " not logged in (" + (userConfig == null) + ")");
-                    return;
+                    if (DateTime.UtcNow < nextTry) return;
+                    nextTry = DateTime.UtcNow.AddSeconds(30);
+
+                    UserConfig userConfig = Plugin.Instance.PluginConfiguration.getByGuid(uid);
+                    if (userConfig == null || userConfig.userToken == "")
+                    {
+                        _logger.Error("Can't scrobble: User " + e.Session.UserName + " not logged in (" + (userConfig == null) + ")");
+                        return;
+                    }
+
+                    if (!canBeScrobbled(userConfig, e.Session)) return;
+
+                    if (lastScrobbled.ContainsKey(sid) && lastScrobbled[sid] == npid)
+                    {
+                        _logger.Debug("Already scrobbled {0} for {1}", e.Session.NowPlayingItem.Name, e.Session.UserName);
+                        return;
+                    }
+
+                    _logger.Debug(_json.SerializeToString(e.Session.NowPlayingItem));
+                    _logger.Info("Trying to scrobble {0} ({1}) for {2} ({3}) - {4} on {5}",
+                        e.Session.NowPlayingItem.Name, npid,
+                        e.Session.UserName, uid,
+                        e.Session.NowPlayingItem.Path, sid);
+
+                    _logger.Debug("Item: " + _json.SerializeToString(e.MediaInfo));
+                    var response = await _api.markAsWatched(e.MediaInfo, userConfig.userToken);
+                    if (response.success)
+                    {
+                        _logger.Debug("Scrobbled without errors");
+                        lastScrobbled[sid] = npid;
+
+                        /*  if (canSendNotification(response.item)) {
+                              await _notifications.SendNotification(
+                                  SimklNotificationsFactory.GetNotificationRequest(response.item, e.Session.UserInternalId),
+                                  e.Session.FullNowPlayingItem, CancellationToken.None);
+                          }*/
+                    }
                 }
-
-                if (!canBeScrobbled(userConfig, e.Session)) return;
-
-                if (lastScrobbled.ContainsKey(sid) && lastScrobbled[sid] == npid) {
-                    _logger.Debug("Alredy scrobbled {0} for {1}", e.Session.NowPlayingItem.Name, e.Session.UserName);
-                    return;
+                catch (InvalidTokenException)
+                {
+                    _logger.Info("Deleted user token");
                 }
-
-                _logger.Debug(_json.SerializeToString(e.Session.NowPlayingItem));
-                _logger.Info("Trying to scrobble {0} ({1}) for {2} ({3}) - {4} on {5}", 
-                    e.Session.NowPlayingItem.Name, npid,
-                    e.Session.UserName, uid,
-                    e.Session.NowPlayingItem.Path, sid);
-
-                _logger.Debug("Item: " + _json.SerializeToString(e.MediaInfo));
-                var response = await _api.markAsWatched(e.MediaInfo, userConfig.userToken);
-                if(response.success) {
-                    _logger.Debug("Scrobbled without errors");
+                catch (InvalidDataException ex)
+                {
+                    _logger.Error("Couldn't scrobble: " + ex.Message);
                     lastScrobbled[sid] = npid;
-
-                  /*  if (canSendNotification(response.item)) {
-                        await _notifications.SendNotification(
-                            SimklNotificationsFactory.GetNotificationRequest(response.item, e.Session.UserInternalId),
-                            e.Session.FullNowPlayingItem, CancellationToken.None);
-                    }*/
                 }
-            } catch (InvalidTokenException) {
-                _logger.Info("Deleted user token");
-            } catch (InvalidDataException ex) {
-                _logger.Error("Couldn't scrobble: " + ex.Message);
-                lastScrobbled[sid] = npid;
-            } catch (Exception ex) {
-                _logger.Error("Caught unknown exception while trying to scrobble: " + ex.Message);
-                _logger.Error(ex.StackTrace);
+                catch (Exception ex)
+                {
+                    _logger.Error("Caught unknown exception while trying to scrobble: " + ex.Message);
+                    _logger.Error(ex.StackTrace);
+                }
+            }
+            catch (Exception expt){
+                _logger.Error("No object: " + expt.Message);
+                _logger.Error(expt.StackTrace);
             }
         }
 

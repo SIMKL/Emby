@@ -1,21 +1,20 @@
-﻿using System;
-using MediaBrowser.Model.Dto;
+﻿using MediaBrowser.Model.Dto;
 
 namespace Simkl.Api.Objects
 {
-    public class SimklMovie: SimklMediaObject
+    public class SimklMovie
     {
         public string title { get; set; }
         public int? year { get; set; }
-        public override SimklIds ids { get; set; }
-        public string watched_at { get; }
+        public SimklIds ids { get; set; }
 
-        public SimklMovie (BaseItemDto item)
+        public SimklMovie() { }
+
+        public SimklMovie(BaseItemDto item)
         {
-            title = item.OriginalTitle;
+            title = item.OriginalTitle ?? item.Name;
             year = item.ProductionYear;
-            ids = new SimklMovieIds(item.ProviderIds);
-            watched_at = DateTime.UtcNow.ToString("yyyy-MM-dd HH\\:mm\\:ss");
+            ids = new SimklIds(item.ProviderIds);
         }
     }
 }

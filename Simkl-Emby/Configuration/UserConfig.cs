@@ -1,27 +1,23 @@
-﻿using System;
-
-namespace Simkl.Configuration
+﻿namespace Simkl.Configuration
 {
     public class UserConfig
     {
-        public bool scrobbleMovies { get; set; }  // Default true, enable false
-        public bool scrobbleShows { get; set; } // Default true, enable false
-        public int scr_pct { get; set; }    // Scrobbling percentage
-        public int scr_w_pct { get; set; }  // Scrobbling "now watching" percentage (only for movies?)
-        public int min_length { get; set; } // Minimum length for scrobbling (in minutes)
-        public string userToken { get; set; }   // Is the user logged in
-        public int scrobbleTimeout { get; set; } // Time between scrobbling tries
-        public string guid { get; set; }    // Emby user id
+        public bool scrobbleMovies { get; set; }
+        public bool scrobbleShows { get; set; }
+        public bool allowRewatch { get; set; }          // stop carries allow_rewatch=yes so a title already in the history is logged as a rewatch (Simkl Pro/VIP)
+        public int min_length { get; set; }     // Minimum length for scrobbling (in minutes)
+        public string userToken { get; set; }   // Empty when the user is logged out
+        public string guid { get; set; }        // Emby user id; only read by the one-shot migration from the old global config
+        public bool autoImport { get; set; }            // Scheduled one-way Simkl -> Emby watched import; the import buttons work regardless
+        public int autoImportHours { get; set; }        // How often the hourly task checks this user's Simkl activity
 
         public UserConfig()
         {
-            this.scrobbleMovies = true;
-            this.scrobbleShows = true;
-            this.scr_pct = 70;
-            this.scr_w_pct = 5;
-            this.min_length = 5;
-            this.userToken = "";    // Todo: check if token is still valid
-            this.scrobbleTimeout = 30;
+            scrobbleMovies = true;
+            scrobbleShows = true;
+            min_length = 5;
+            autoImportHours = 24;
+            userToken = "";
         }
     }
 }

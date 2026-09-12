@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;    // IPluginConfigurationPage
-// using System.Reflection;    // IPluginConfigurationPage
+using System.IO;
 
 using MediaBrowser.Common.Plugins;
 using MediaBrowser.Common.Configuration;
@@ -15,8 +14,9 @@ namespace Simkl
 {
     public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages, IHasThumbImage
     {
-        // public override string Name { get { return "Simkl TV Tracker"; } }
-        // https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/operators/lambda-operator#expression-body-definition
+        public const string StaticId = "Simkl";
+        public const string StaticName = "Simkl";
+
         public override string Name => "Simkl TV Tracker";
         public override string Description => "Scrobble your watched Movies, TV Shows and Anime to Simkl and share your progress with friends!";
 
@@ -28,18 +28,33 @@ namespace Simkl
 
         public static Plugin Instance { get; private set; }
 
-        /* IHasWebPages */
-
-        public IEnumerable<PluginPageInfo> GetPages() => new[]   // As we use new T inside, we can make it an implicitly typed array
+        public IEnumerable<PluginPageInfo> GetPages() => new[]
             {
                 new PluginPageInfo
                 {
-                    Name = "Simkl",
-                    EmbeddedResourcePath = "Simkl.Configuration.configPage.html"
+                    Name = "simkl_admin",
+                    DisplayName = "Simkl",
+                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.simkladmin.html",
+                    IsMainConfigPage = true
+                },
+                new PluginPageInfo
+                {
+                    Name = "simkljs",
+                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.simkl.js"
+                },
+                new PluginPageInfo
+                {
+                    Name = StaticName,
+                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.simkl.html",
+                    EnableInUserMenu = true,
+                    FeatureId = StaticId
+                },
+                new PluginPageInfo
+                {
+                    Name = "simkladminjs",
+                    EmbeddedResourcePath = GetType().Namespace + ".Configuration.simkladmin.js"
                 }
             };
-
-        public PluginConfiguration PluginConfiguration => Configuration;
 
         public ImageFormat ThumbImageFormat {
             get {return ImageFormat.Jpg; }
@@ -47,13 +62,6 @@ namespace Simkl
 
         public Stream GetThumbImage() {
             return GetType().Assembly.GetManifestResourceStream("Simkl.emby_thumb.jpg");
-        }
-
-        public void deleteUserToken(string userToken) {
-            foreach (UserConfig config in Configuration.userConfigs) {
-                if (config.userToken == userToken) config.userToken = "";
-            }
-            SaveConfiguration();
         }
     }
 }

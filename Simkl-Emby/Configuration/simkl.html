@@ -1,0 +1,92 @@
+<div is="emby-scroller" class="view flex flex-direction-column scrollFrameY flex-grow" data-horizontal="false" data-forcescrollbar="true" data-centerfocus="true" data-bindheader="true" data-controller="__plugin/simkljs" data-title="Simkl">
+    <div class="scrollSlider flex-grow flex-direction-column padded-left padded-left-page padded-right padded-top-page padded-bottom-page">
+
+        <form class="auto-center padded-top">
+
+            <div class="loginButtonContainer">
+                <h3>It seems you are not logged in, do you wish to log in?</h3>
+                <button is="emby-button" type="button" class="btnSimklLogin raised button-submit block"><span>Log In</span></button>
+                <button onclick="location.href='https://simkl.com/';" is="emby-button" type="button" class="raised block"><span>Create an account</span></button>
+            </div>
+            <div class="loggingIn hide">
+                <h2>Logging In</h2>
+                <div class="loginText"></div>
+                <h3 class="loginPin"></h3>
+                <span class="loginSecondsRemaining">900</span> seconds remaining
+                <button is="emby-button" type="button" class="btnSimklCancel raised button-cancel block"><span>Cancel</span></button>
+            </div>
+            <div class="configOptionsContainer hide">
+                <div class="flex flex-wrap-wrap align-items-center">
+                    <h3 class="simklAccount flex-grow" style="margin-right: 1em;">You are logged in to Simkl.</h3>
+                    <div class="simklLinks hide">
+                        <a is="emby-linkbutton" class="button-link simklPlaybackLink" target="_blank" href="https://simkl.com/">Watch history - Playback Progress Manager on Simkl</a>
+                    </div>
+                </div>
+                <button is="emby-button" type="button" class="btnSimklLogout raised button block"><span>Log Out</span></button>
+                <h2>Scrobbling options</h2>
+                <div class="checkboxList checkboxListContainer">
+                    <div class="checkboxContainer">
+                        <label>
+                            <input is="emby-checkbox" type="checkbox" class="scrobbleMovies" />
+                            <span>Autoscrobbling Movies</span>
+                        </label>
+                    </div>
+                    <div class="checkboxContainer">
+                        <label>
+                            <input is="emby-checkbox" type="checkbox" class="scrobbleShows" />
+                            <span>Autoscrobbling TV Shows</span>
+                        </label>
+                    </div>
+                    <div class="checkboxContainer">
+                        <label>
+                            <input is="emby-checkbox" type="checkbox" class="allowRewatch" />
+                            <span>Log rewatches on Simkl (Pro)</span>
+                        </label>
+                        <div class="fieldDescription simklRewatchNote hide">Needs a Simkl Pro or VIP plan. Upgrade at <a is="emby-linkbutton" class="button-link" href="https://simkl.com/vip/" target="_blank">simkl.com/vip</a>.</div>
+                    </div>
+                </div>
+                <div class="fieldDescription">
+                    <ul style="margin: .5em 0 0; padding-left: 1.2em; list-style: disc;">
+                        <li>Play, pause and stop are reported to Simkl as they happen and show on your profile as watching now; who can see that is set under <a is="emby-linkbutton" class="button-link" href="https://simkl.com/settings/privacy/" target="_blank">Watching now privacy on Simkl</a>.</li>
+                        <li>An item is marked as watched when you stop after 80%; stopping earlier saves your position on Simkl, where the Playback Progress Manager lists it.</li>
+                        <li>Manually marking a movie, an episode, a season or a whole series as played in Emby marks it as watched on Simkl too. Unmarking a single movie or episode also removes it from your Simkl history. Unmarking a whole season or series does not touch your Simkl history, by design, so a bulk change in Emby cannot wipe out your watch history.</li>
+                        <li>With rewatches on, finishing something that is already in your Simkl history is logged as a rewatch; this needs a Simkl Pro or VIP account and is ignored otherwise.</li>
+                    </ul>
+                </div>
+                <div>
+                    <button is="emby-button" type="submit" class="raised button-submit block"><span>${Save}</span></button>
+                </div>
+                <h2>Import history</h2>
+                <div class="fieldDescription">Marks movies and episodes in your Emby library as played when they are watched on Simkl, with the date you watched them. Nothing is sent from Emby to Simkl.</div>
+                <div class="importSection">
+                    <button is="emby-button" type="button" class="btnSimklImport raised block"><span>Import changes since the last import</span></button>
+                    <div class="fieldDescription importStatus"></div>
+                </div>
+                <div class="toggleContainer" style="margin-top: 1.5em;">
+                    <label>
+                        <input type="checkbox" is="emby-toggle" class="autoImport" />
+                        <span>Automatically import new Simkl history</span>
+                    </label>
+                    <div class="fieldDescription toggleFieldDescription">Emby asks Simkl whether you watched anything new and marks only those items. The very first import goes through your whole history.</div>
+                </div>
+                <div class="selectContainer autoImportInterval hide">
+                    <select is="emby-select" class="autoImportHours" label="Check for new history">
+                        <option value="1">Every hour</option>
+                        <option value="3">Every 3 hours</option>
+                        <option value="6">Every 6 hours</option>
+                        <option value="12">Every 12 hours</option>
+                        <option value="24">Every day</option>
+                        <option value="168">Every week</option>
+                    </select>
+                    <div class="fieldDescription autoImportStatus"></div>
+                </div>
+                <div class="importResetContainer" style="margin-top: 2em;">
+                    <h3 style="margin-bottom: .25em;">Start over</h3>
+                    <div class="fieldDescription">Goes through your whole Simkl history again, for example when the import missed something or you now use a different Simkl account. Nothing is unmarked: movies and episodes Emby already has as played only get their watch date refreshed from Simkl.</div>
+                    <button is="emby-button" type="button" class="btnSimklReset button-link" style="margin-top: .5em;"><span>Reset and re-import fully</span></button>
+                </div>
+                <div class="fieldDescription simklSupport hide" style="margin-top: 2em;">Support the development of the Emby add-on for Simkl with a Super Supporter, PRO or VIP supporter plan at <a is="emby-linkbutton" class="button-link" href="https://simkl.com/vip/" target="_blank">simkl.com/vip</a>.</div>
+            </div>
+        </form>
+    </div>
+</div>

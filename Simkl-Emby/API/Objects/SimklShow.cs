@@ -1,44 +1,20 @@
-﻿using MediaBrowser.Model.Dto;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace Simkl.Api.Objects
 {
-    public class SimklShow: SimklMediaObject
+    public class SimklShow
     {
         public string title { get; set; }
         public int? year { get; set; }
-        public Season[] seasons { get; set; }
-        public override SimklIds ids { get; set; }
+        public SimklIds ids { get; set; }
 
-        public SimklShow(BaseItemDto MediaInfo)
+        public SimklShow() { }
+
+        public SimklShow(string seriesTitle, int? seriesYear, Dictionary<string, string> seriesProviderIds)
         {
-            title = MediaInfo.SeriesName;
-            ids = new SimklShowIds(MediaInfo.ProviderIds);
-            year = MediaInfo.ProductionYear;
-            seasons = new Season[] {
-                new Season
-                {
-                    number = MediaInfo.ParentIndexNumber,
-                    episodes = new ShowEpisode[]
-                    {
-                        new ShowEpisode { number = MediaInfo.IndexNumber }
-                    }
-                }
-            };
+            title = seriesTitle;
+            year = seriesYear;
+            ids = new SimklIds(seriesProviderIds);
         }
-    }
-
-    public class ShowEpisode
-    {
-        public int? number { get; set; }
-        // TODO: watched_at
-    }
-
-    public class Season
-    {
-        public int? number { get; set; }
-        public ShowEpisode[] episodes { get; set; }
     }
 }

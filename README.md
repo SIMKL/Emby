@@ -31,7 +31,16 @@ You should now see your `Name` from Simkl there and `Scrobbling options` with ch
 
 `✔ Autoscrobbling TV Shows`
 
-`Scrobbling percentage: 70`
+`☐ Log rewatches on Simkl (Pro)` - when on, finishing something already in your Simkl history is logged as a rewatch (needs Simkl Pro or VIP)
+
+Play, pause and stop are reported to Simkl as they happen and show on your Simkl profile as watching now; choose who can see that at https://simkl.com/settings/privacy/ (the plugin page links there). An item is marked as watched when you stop after 80%; stopping earlier saves your position on Simkl, where the Playback Progress Manager lists it (Emby keeps its own resume points).
+
+Requires Emby Server 4.8.11 or newer (the plugin is built against that SDK; per-user settings do not exist before 4.8).
+
+## Import your Simkl history into Emby
+On your Simkl page in Emby press `Import changes since the last import`. Movies and episodes in your Emby library that you watched on Simkl since the last import are marked as played in Emby, with the date you watched them; the very first import goes through your whole history. Nothing is sent from Emby to Simkl. The status line under the button shows the result of the last run. `Reset and re-import fully`, under "Start over" at the end of the section, goes through the whole history again and also refreshes the watch dates of items Emby already has as played.
+
+Switch on `Automatically import new Simkl history` to let Emby check Simkl regularly and mark only what you watched since the last import; pick how often under `Check for new history` (every hour up to every week, default once a day). The very first import, automatic or manual, goes through your whole history; every later run only picks up what is new.
 
 ## How to enable notifications when something is marked as watched
 1. On Emby's dashboard, you'll have to go to the bottom and, on expert options, select "Notifications"
@@ -50,6 +59,7 @@ Now you can contact us to try and fix the problem
 ## Current features
 - Multi-user support
 - Auto scrobble Movies and TV Shows at given percentage to Simkl
+- Marking a movie, an episode, a season or a whole series as played in Emby marks it as watched on Simkl too, following the same checkboxes. Unmarking a single movie or episode also removes it from your Simkl history. Unmarking a whole season or series does not touch your Simkl history, by design (recognised by several episodes changing at once; a show with a single episode in Emby cannot be told apart from a single click), so a bulk change in Emby cannot wipe out your watch history
 - Easy login using pin (no more putting passwords with the TV remote)
 - If scrobbling fails, search it using filename using Simkl's API and then scrobble it
 - Send notifications about scrobbling

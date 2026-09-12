@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <AssemblyVersion>1.0.6.0</AssemblyVersion>
-    <FileVersion>1.0.6.0</FileVersion>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
     <Authors>David Davó</Authors>
     <Company>Simkl</Company>
-    <Version>0.1.6</Version>
+    <Version>2.0.0</Version>
     <NeutralLanguage>en-GB</NeutralLanguage>
     <RepositoryUrl>https://github.com/SIMKL/Emby</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -17,18 +17,24 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="MediaBrowser.Server.Core" Version="4.7.7" />
-    <PackageReference Include="System.Memory" Version="4.5.5" />
+    <PackageReference Include="MediaBrowser.Server.Core" Version="4.8.11" />
+    <PackageReference Include="System.Memory" Version="4.6.0" />
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.7.0" />
   </ItemGroup>
   
   <ItemGroup>
-    <None Remove="Configuration\configPage.html" />
+    <None Remove="Configuration\simkl.html" />
+    <None Remove="Configuration\simkl.js" />
+    <None Remove="Configuration\simkladmin.html" />
+    <None Remove="Configuration\simkladmin.js" />
     <None Remove="emby_thumb.jpg" />
   </ItemGroup>
   
   <ItemGroup>
-    <EmbeddedResource Include="Configuration\configPage.html" />
+    <EmbeddedResource Include="Configuration\simkl.html" />
+    <EmbeddedResource Include="Configuration\simkl.js" />
+    <EmbeddedResource Include="Configuration\simkladmin.html" />
+    <EmbeddedResource Include="Configuration\simkladmin.js" />
     <EmbeddedResource Include="emby_thumb.jpg" />
   </ItemGroup>
   

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Simkl.Api.Responses
+﻿namespace Simkl.Api.Responses
 {
     public class CodeResponse
     {

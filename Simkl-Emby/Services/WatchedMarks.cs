@@ -117,7 +117,7 @@ namespace Simkl.Services
         private bool Eligible(User user, BaseItem item)
         {
             var config = ConfigurationFactory.LoadUser(_userManager, user.InternalId);
-            return config != null && !string.IsNullOrEmpty(config.userToken) && Scrobbler.canBeScrobbled(config, item);
+            return config != null && !string.IsNullOrEmpty(config.userToken) && config.syncWatchedMarks && Scrobbler.canBeScrobbled(config, item);
         }
 
         // waits for the burst to end, then sends everything collected for the user in one request
@@ -147,8 +147,9 @@ namespace Simkl.Services
                     batch.Pending = null;
                 }
 
-                var config = ConfigurationFactory.LoadUser(_userManager, user.InternalId);   // the user may have logged out during the hold
-                if (config == null || string.IsNullOrEmpty(config.userToken)) return;
+                // re-read: the user may have logged out, or switched the mirroring off, during the hold
+                var config = ConfigurationFactory.LoadUser(_userManager, user.InternalId);
+                if (config == null || string.IsNullOrEmpty(config.userToken) || !config.syncWatchedMarks) return;
 
                 await batch.Sending.WaitAsync();
                 try

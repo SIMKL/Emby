@@ -33,6 +33,7 @@ namespace Simkl.Services
         private readonly ILogger _logger;
         private readonly IUserManager _userManager;
         private SimklApi _api;
+        private readonly ReloginNudge _relogin;
         private readonly ConcurrentDictionary<string, PlaybackState> _sessions = new ConcurrentDictionary<string, PlaybackState>();
         // one send at a time per Simkl account (by token: two Emby users may share one), across playbacks: Simkl serializes an
         // account's scrobbles behind a lock, and a stop or pause that overtook the next item's start would clear that item's session
@@ -80,6 +81,7 @@ namespace Simkl.Services
             _logger = logManager.GetLogger("Simkl Scrobbler");
             _userManager = userManager;
             _api = new SimklApi(json, _logger, httpClient, userManager, appHost);
+            _relogin = new ReloginNudge(sessionManager, _logger, userManager);
         }
 
         public void Run()
@@ -118,10 +120,7 @@ namespace Simkl.Services
 
         private void UpgradeData(UserConfig userConfig)
         {
-            if (userConfig == null || string.IsNullOrEmpty(userConfig.guid))
-            {
-                return;
-            }
+            if (userConfig == null || string.IsNullOrEmpty(userConfig.guid)) return;
 
             var embyUserId = _userManager.GetInternalId(userConfig.guid);
             if (embyUserId == 0) return;
@@ -169,7 +168,7 @@ namespace Simkl.Services
         }
 
         // Emby models a session's users as a list (profile sharing); report for every one that is logged in to Simkl
-        private List<Target> EligibleUsers(PlaybackProgressEventArgs e, BaseItem item, long[] rememberedIds)
+        private List<Target> EligibleUsers(PlaybackProgressEventArgs e, BaseItem item, long[] rememberedIds, string action)
         {
             var targets = new List<Target>();
             var users = rememberedIds != null ? rememberedIds.Select(id => _userManager.GetUserById(id)).ToList()
@@ -179,8 +178,13 @@ namespace Simkl.Services
             {
                 if (user == null || !user.IsGrantedAccessToFeature(Plugin.StaticId)) continue;   // an admin can switch Simkl off per user
                 var config = ConfigurationFactory.LoadUser(_userManager, user.InternalId);
-                if (config == null || string.IsNullOrEmpty(config.userToken) || !canBeScrobbled(config, item)) continue;
-                targets.Add(new Target { EmbyUserId = user.InternalId, Name = user.Name, Config = config, Account = HistoryImporter.AccountKey(config.userToken) });
+                if (config == null || string.IsNullOrEmpty(config.userToken)) continue;
+                // remind a still-legacy login to reconnect, on a live event only (not as playback ends) and before the
+                // scrobble filter, so a legacy user gets it even with autoscrobbling off; the nudge gates itself
+                if (action != "stop") _relogin.Remind(config, user.InternalId, e.Session?.Id);
+                if (!canBeScrobbled(config, item)) continue;
+                // keyed on the grant, not the access token, so the account gate stays one gate across a token renewal
+                targets.Add(new Target { EmbyUserId = user.InternalId, Name = user.Name, Config = config, Account = HistoryImporter.AccountKey(config.AccountAnchor()) });
             }
 
             return targets;
@@ -329,7 +333,7 @@ namespace Simkl.Services
                 var since = DateTime.UtcNow;    // a stop that lands while this report waits its turn is newer than the report
 
                 var progress = forcedProgress ?? Progress(e.PlaybackPositionTicks, item.RunTimeTicks);
-                var targets = EligibleUsers(e, item, previous?.UserIds);
+                var targets = EligibleUsers(e, item, previous?.UserIds, action);
                 var request = progress == null || targets.Count == 0 ? null : _api.BuildRequest(dto, item, progress.Value);
                 var state = previous ?? new PlaybackState();
 
@@ -350,20 +354,15 @@ namespace Simkl.Services
                     try
                     {
                         if (stillWanted != null && !stillWanted()) return;
-                        string[] calls;
-                        if (action == "stop")
-                        {
-                            calls = new[] { action };
-                        }
-                        else
+                        // a new start of another item marks the running session watched when Simkl's clock says it passed 80%; a new start of
+                        // the same item behind that clock (a seek back) does not since API 2026-09-12, so a seek needs no pause first
+                        var call = action == "seek" ? "start" : action;
+                        if (action != "stop")
                         {
                             // a stop that landed meanwhile has removed the remembered state; putting it back would let a start follow the stop
                             if (previous != null && !StillTracked(e, previous)) return;
                             // a stop that landed while this report waited its turn ended the playback; publishing it now would revive it
                             if (previous == null && _stopped.TryGetValue(StoppedKey(e), out var endedAt) && endedAt >= since) return;
-                            // a new start of another item marks the running session watched when Simkl's clock says it passed 80%; a new start of
-                            // the same item behind that clock (a seek back) does not since API 2026-09-12, so a seek needs no pause first
-                            calls = new[] { action == "seek" ? "start" : action };
                             state.ItemId = dto.Id;
                             state.Paused = action == "pause";
                             state.PauseSent = action == "pause";
@@ -379,18 +378,13 @@ namespace Simkl.Services
                         {
                             try
                             {
-                                foreach (var call in calls)
-                                {
-                                    var payload = state.Resolved == null ? request : WithProgress(state.Resolved, progress.Value);
-                                    _logger.Info("Simkl {0} {1}% for {2}: {3}", call, payload.progress, target.Name, dto.Name);
-                                    var response = await Send(call, payload, dto, target.Config, target.EmbyUserId, progress.Value, state);
-                                    if (state.Unmatched) return;
-                                    if (response != null)
-                                    {
-                                        _logger.Info("Simkl answered {0}{1} for {2}", response.action, response.rewatch_status == null ? "" : " (rewatch " + response.rewatch_status + ")", dto.Name);
-                                        if (response.rewatch_status == "pro_required") DisableRewatch(target);
-                                    }
-                                }
+                                var payload = state.Resolved == null ? request : WithProgress(state.Resolved, progress.Value);
+                                _logger.Info("Simkl {0} {1}% for {2}: {3}", call, payload.progress, target.Name, dto.Name);
+                                var response = await Send(call, payload, dto, target.Config, target.EmbyUserId, progress.Value, state);
+                                if (state.Unmatched) return;
+                                if (response == null) continue;
+                                _logger.Info("Simkl answered {0}{1} for {2}", response.action, response.rewatch_status == null ? "" : " (rewatch " + response.rewatch_status + ")", dto.Name);
+                                if (response.rewatch_status == "pro_required") DisableRewatch(target);
                             }
                             catch (InvalidTokenException)
                             {

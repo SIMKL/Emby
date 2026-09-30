@@ -55,6 +55,7 @@ define([
         return {
             scrobbleMovies: view.querySelector(".scrobbleMovies").checked,
             scrobbleShows: view.querySelector(".scrobbleShows").checked,
+            syncWatchedMarks: view.querySelector(".syncWatchedMarks").checked,
             allowRewatch: view.querySelector(".allowRewatch").checked
         };
     }
@@ -62,16 +63,12 @@ define([
     function applyScrobbleOptions(config, options) {
         config.scrobbleMovies = options.scrobbleMovies;
         config.scrobbleShows = options.scrobbleShows;
+        config.syncWatchedMarks = options.syncWatchedMarks;
         config.allowRewatch = options.allowRewatch;
     }
 
-    // Absolute /emby/... URL so it survives reverse-proxy base paths; ApiClient attaches the
-    // auth header, api_key is also added because the pin routes are not [Authenticated].
-    function simklApiGet(path) {
-        return ApiClient.getJSON(ApiClient.getUrl(path, { api_key: ApiClient.accessToken() }));
-    }
-
-    // The import/account routes are [Authenticated], so the X-Emby-Token ApiClient adds on its own is enough.
+    // Absolute /emby/... URL so it survives reverse-proxy base paths. Every plugin route is [Authenticated], so the
+    // X-Emby-Token ApiClient adds on its own is enough.
     function simklGet(path) {
         return ApiClient.getJSON(ApiClient.getUrl(path));
     }
@@ -88,7 +85,7 @@ define([
         what = what || "Simkl login";
         console.error(what + " request failed", err);
 
-        // only the PIN routes call out to api.simkl.com; a 500 on a settings call is Emby's own
+        // only the login routes call out to api.simkl.com; a 500 on a settings call is Emby's own
         if (login && (status === 500 || status === 503)) {
             return "Emby could not reach api.simkl.com. Check the server's outbound firewall or seedbox rules, then try again.";
         }
@@ -107,12 +104,18 @@ define([
         });
     }
 
-    function stopLoginProcess(instance) {
+    // keepServerSide is set when the pending code is already gone (a completed or expired login) or about to be
+    // replaced by a fresh one, so only an explicit Cancel tells the server to drop the code it is still holding.
+    function stopLoginProcess(instance, keepServerSide) {
         if (instance._loginTimer) { clearTimeout(instance._loginTimer); instance._loginTimer = null; }
         if (instance._remainingTimer) { clearInterval(instance._remainingTimer); instance._remainingTimer = null; }
-        instance._loginCode = null;
+        var attempt = instance._loginAttempt;
+        instance._loginAttempt = null;
         instance._finish = null;
-        showSection(instance.view, ".loginButtonContainer");
+        if (attempt && !keepServerSide) {
+            simklPost("Simkl/oauth/device/" + instance.params.userId + "/cancel").catch(function () { /* the code expires on its own */ });
+        }
+        if (instance.view) showSection(instance.view, ".loginButtonContainer");
     }
 
     function abortLogin(instance, message) {
@@ -121,49 +124,74 @@ define([
         stopLoginProcess(instance);
     }
 
-    function scheduleCheck(instance, code) {
+    function scheduleCheck(instance, attempt, interval) {
         instance._loginTimer = setTimeout(function () {
-            checkLoginProcess(instance, code);
-        }, code.interval * 1000);
+            checkLoginProcess(instance, attempt);
+        }, (interval || 5) * 1000);
     }
 
-    // _loginCode ties every poll to the attempt that started it: a response landing after Cancel, destroy or a
-    // restarted login (instance.view may already be null) is dropped instead of acting on the new state.
-    function checkLoginProcess(instance, code) {
-        simklApiGet("Simkl/oauth/pin/" + code.user_code).then(function (response) {
-            if (instance._loginCode !== code) return;
+    // _loginAttempt ties every poll to the attempt that started it: a response landing after Cancel, destroy or a
+    // restarted login (instance.view may already be null) is dropped instead of acting on the new state. The token is
+    // never returned here; on "connected" the page re-reads the stored config, which the server wrote.
+    function checkLoginProcess(instance, attempt) {
+        simklPost("Simkl/oauth/device/" + instance.params.userId + "/poll").then(function (status) {
+            if (instance._loginAttempt !== attempt) return;
 
-            if (Date.now() > instance._finish) {
-                abortLogin(instance, "Timed out!");
-            } else if (response.result === "KO") {
-                scheduleCheck(instance, code);
-            } else if (response.result === "OK") {
-                stopLoginProcess(instance);
-                saveConfiguration(instance, function (config) { config.userToken = response.access_token; });
+            if (status.status === "connected") {
+                stopLoginProcess(instance, true);
+                loadConfiguration(instance);
+            } else if (status.status === "pending") {
+                if (Date.now() > instance._finish) { abortLogin(instance, "The sign-in code expired. Please try again."); return; }
+                attempt.failures = 0;
+                scheduleCheck(instance, attempt, status.interval);
+            } else if (status.status === "expired") {
+                abortLogin(instance, "The sign-in code expired. Please try again.");
             } else {
-                abortLogin(instance, "Error logging in");
+                abortLogin(instance, status.message || "Error logging in.");
             }
 
         }, function (err) {
-            if (instance._loginCode !== code) return;
+            if (instance._loginAttempt !== attempt) return;
+            // the login keeps going on the server, so a dropped poll is retried a few times before giving up
+            attempt.failures = (attempt.failures || 0) + 1;
+            if (attempt.failures < 3) { scheduleCheck(instance, attempt, instance._loginInterval); return; }
             abortLogin(instance, describeError(err));
         });
     }
 
     function startLoginProcess(instance) {
+        if (instance._loginStarting) return;   // a double-click would mint a second device code the page never shows
         var view = instance.view;
+        var userId = instance.params.userId;
+        stopLoginProcess(instance, true);   // a second click starts a fresh code; drop the previous attempt's timers, the new one supersedes it
         loading.show();
 
-        simklApiGet("Simkl/oauth/pin").then(function (code) {
+        var attempt = {};
+        instance._loginAttempt = attempt;
+        instance._loginStarting = true;
+
+        simklPost("Simkl/oauth/device/" + userId).then(function (status) {
+            instance._loginStarting = false;
             loading.hide();
-            if (!instance.view) return;   // destroyed while the pin was being issued
+            if (!instance.view || instance._loginAttempt !== attempt) return;   // destroyed or restarted while the code was being issued
+            if (status.status !== "pending") { abortLogin(instance, status.message || "Could not start the sign-in. Try again."); return; }
 
-            instance._loginCode = code;
-            instance._finish = Date.now() + (code.expires_in * 1000);
+            instance._finish = Date.now() + (status.expiresIn * 1000);
+            instance._loginInterval = status.interval;
 
-            view.querySelector(".loginText").innerHTML = "Please visit <a href='" + code.verification_url + "/" + code.user_code +
-                "' target='_blank'>" + code.verification_url + "</a> on your phone or computer and enter the following code:";
-            view.querySelector(".loginPin").textContent = code.user_code;
+            view.querySelector(".loginText").innerHTML = "Please visit <a href='" + status.verificationUri +
+                "' target='_blank'>" + status.verificationUri + "</a> on your phone or computer and enter the following code:";
+            view.querySelector(".loginPin").textContent = status.userCode;
+
+            var shortcut = view.querySelector(".loginShortcut");
+            if (shortcut) {
+                if (status.verificationUriComplete) {
+                    shortcut.innerHTML = "Or <a href='" + status.verificationUriComplete + "' target='_blank'>open the page with the code already filled in</a>.";
+                    shortcut.classList.remove("hide");
+                } else {
+                    shortcut.classList.add("hide");
+                }
+            }
 
             var secondsEl = view.querySelector(".loginSecondsRemaining");
             var renderRemaining = function () {
@@ -172,18 +200,28 @@ define([
             renderRemaining();
             instance._remainingTimer = setInterval(renderRemaining, 1000);
 
-            scheduleCheck(instance, code);
+            scheduleCheck(instance, attempt, status.interval);
             showSection(view, ".loggingIn");
 
         }, function (err) {
+            instance._loginStarting = false;
             loading.hide();
-            if (!instance.view) return;   // destroyed while the pin was being issued
+            if (!instance.view || instance._loginAttempt !== attempt) return;   // destroyed or restarted while the code was being issued
             abortLogin(instance, describeError(err));
         });
     }
 
+    // Logout is a server route, not a config save: the token is server-owned, and a saved config snapshot that left it
+    // out would be written back over the login. The page re-reads the stored config afterwards.
     function logOut(instance) {
-        saveConfiguration(instance, function (config) { config.userToken = ""; });
+        loading.show();
+        simklPost("Simkl/logout/" + instance.params.userId).then(function () {
+            loading.hide();
+            loadConfiguration(instance);
+        }, function (err) {
+            loading.hide();
+            alert(describeError(err, "Logging out"));
+        });
     }
 
     // The Simkl account behind the token is read on every load and never stored, so a re-login can never show a stale name.
@@ -199,6 +237,8 @@ define([
             : "You are logged in to Simkl.";
         view.querySelector(".simklSupport").classList.toggle("hide", !free);
         view.querySelector(".simklRewatchNote").classList.toggle("hide", !free);
+        // a login still on the old pin flow is offered a one-click reconnect onto the OAuth 2 device flow
+        view.querySelector(".simklLegacyNotice").classList.toggle("hide", !(known && account.legacy));
         var rewatch = view.querySelector(".allowRewatch");
         rewatch.disabled = free;
         if (free) rewatch.checked = false;
@@ -373,6 +413,9 @@ define([
                 fetchAccount(instance);
                 view.querySelector(".scrobbleMovies").checked = currentUserConfig.scrobbleMovies !== false;
                 view.querySelector(".scrobbleShows").checked = currentUserConfig.scrobbleShows !== false;
+                // !== false, like the two above: a user stored before this setting existed has no value for it and
+                // must keep mirroring, which is what the server side defaults to as well
+                view.querySelector(".syncWatchedMarks").checked = currentUserConfig.syncWatchedMarks !== false;
                 view.querySelector(".allowRewatch").checked = currentUserConfig.allowRewatch === true;
                 view.querySelector(".autoImport").checked = currentUserConfig.autoImport === true;
                 view.querySelector(".autoImportHours").value = String(currentUserConfig.autoImportHours || 24);
@@ -406,6 +449,7 @@ define([
         var view = instance.view;
         view.querySelector("form").addEventListener("submit", onSubmit.bind(instance));
         view.querySelector(".btnSimklLogin").addEventListener("click", function () { startLoginProcess(instance); });
+        view.querySelector(".btnSimklReconnect").addEventListener("click", function () { startLoginProcess(instance); });
         view.querySelector(".btnSimklCancel").addEventListener("click", function () { stopLoginProcess(instance); });
         view.querySelector(".btnSimklLogout").addEventListener("click", function () { logOut(instance); });
         view.querySelector(".btnSimklImport").addEventListener("click", function () { startImport(instance, false); });

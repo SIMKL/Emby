@@ -27,6 +27,8 @@ namespace Simkl.Api.Objects
         public string tvdb { get; set; }
         public string anidb { get; set; }
 
+        public ScrobbleEpisodeIds() { }      // /sync/history echoes the episode ids back under not_found, so this type is read as well as written
+
         public ScrobbleEpisodeIds(Dictionary<string, string> providerIds)
         {
             tvdb = SimklIds.Get(providerIds, "Tvdb");

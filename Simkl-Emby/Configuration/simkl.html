@@ -12,6 +12,7 @@
                 <h2>Logging In</h2>
                 <div class="loginText"></div>
                 <h3 class="loginPin"></h3>
+                <div class="fieldDescription loginShortcut hide"></div>
                 <span class="loginSecondsRemaining">900</span> seconds remaining
                 <button is="emby-button" type="button" class="btnSimklCancel raised button-cancel block"><span>Cancel</span></button>
             </div>
@@ -21,6 +22,19 @@
                     <div class="simklLinks hide">
                         <a is="emby-linkbutton" class="button-link simklPlaybackLink" target="_blank" href="https://simkl.com/">Watch history - Playback Progress Manager on Simkl</a>
                     </div>
+                </div>
+                <!-- Amber callout, not a plain fieldDescription, so a legacy login is noticed. The colour is set
+                     against a translucent tint that reads on a light theme and a dark one alike. The icon is an empty
+                     span whose class Emby's stylesheet renders as the glyph; a name it does not carry shows nothing
+                     rather than the word. The button is on its own line: an emby-button in a sentence lays out as a
+                     block and breaks the text around it. -->
+                <div class="simklLegacyNotice hide" style="margin: .75em 0 1.25em; padding: .85em 1em; border-left: 4px solid #ffa726; border-radius: 4px; background: rgba(255, 167, 38, .12);">
+                    <div style="display: flex; align-items: center; font-weight: 600; margin-bottom: .4em;">
+                        <i class="md-icon" aria-hidden="true" style="color: #ffa726; margin-right: .4em; font-size: 1.3em;">warning</i>
+                        <span>Old Simkl sign-in</span>
+                    </div>
+                    <div style="font-size: .95em; line-height: 1.45;">This account is connected with the old Simkl sign-in. It keeps working for a while yet, but it is being retired, so reconnect it when convenient to move it to the current sign-in. Nothing is lost by reconnecting: the Simkl account, its history and these settings all stay as they are.</div>
+                    <button is="emby-button" type="button" class="btnSimklReconnect raised" style="margin-top: .9em;"><span>Reconnect to Simkl</span></button>
                 </div>
                 <button is="emby-button" type="button" class="btnSimklLogout raised button block"><span>Log Out</span></button>
                 <h2>Scrobbling options</h2>
@@ -37,7 +51,17 @@
                             <span>Autoscrobbling TV Shows</span>
                         </label>
                     </div>
-                    <div class="checkboxContainer">
+                    <!-- checkboxContainer on its own is a ROW flex, which puts the description beside the label instead
+                         of under it; checkboxContainer-withDescription is Emby's own class for the case and only sets
+                         flex-direction: column -->
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label>
+                            <input is="emby-checkbox" type="checkbox" class="syncWatchedMarks" />
+                            <span>Sync manual marks to Simkl</span>
+                        </label>
+                        <div class="fieldDescription">Marking played or unplayed in Emby changes your Simkl history too. Playback is scrobbled either way.</div>
+                    </div>
+                    <div class="checkboxContainer checkboxContainer-withDescription">
                         <label>
                             <input is="emby-checkbox" type="checkbox" class="allowRewatch" />
                             <span>Log rewatches on Simkl (Pro)</span>
@@ -49,7 +73,7 @@
                     <ul style="margin: .5em 0 0; padding-left: 1.2em; list-style: disc;">
                         <li>Play, pause and stop are reported to Simkl as they happen and show on your profile as watching now; who can see that is set under <a is="emby-linkbutton" class="button-link" href="https://simkl.com/settings/privacy/" target="_blank">Watching now privacy on Simkl</a>.</li>
                         <li>An item is marked as watched when you stop after 80%; stopping earlier saves your position on Simkl, where the Playback Progress Manager lists it.</li>
-                        <li>Manually marking a movie, an episode, a season or a whole series as played in Emby marks it as watched on Simkl too. Unmarking a single movie or episode also removes it from your Simkl history. Unmarking a whole season or series does not touch your Simkl history, by design, so a bulk change in Emby cannot wipe out your watch history.</li>
+                        <li>With manual marks on, marking a movie, an episode, a season or a whole series as played in Emby marks it as watched on Simkl too, and unmarking a single movie or episode also removes it from your Simkl history. Unmarking a whole season or series does not touch your Simkl history, by design, so a bulk change in Emby cannot wipe out your watch history.</li>
                         <li>With rewatches on, finishing something that is already in your Simkl history is logged as a rewatch; this needs a Simkl Pro or VIP account and is ignored otherwise.</li>
                     </ul>
                 </div>

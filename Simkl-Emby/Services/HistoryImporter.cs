@@ -172,8 +172,10 @@ namespace Simkl.Services
         private ImportState MarkStarted(User user, ImportRun run, UserConfig config)
         {
             var state = LoadState(user);
-            // cursors belong to the Simkl account they were read under; a different login starts over with a full import
-            if (run.Reset || state.cursorAccount != AccountKey(config.userToken))
+            // cursors belong to the Simkl account they were read under; a different login starts over with a full import.
+            // Keyed on the grant (the refresh token), not the access token, which rotates ~weekly and would otherwise
+            // make every renewal look like a new account.
+            if (run.Reset || state.cursorAccount != AccountKey(config.AccountAnchor()))
             {
                 state.fullImportAt = "";
                 state.syncedAt = "";
@@ -223,7 +225,7 @@ namespace Simkl.Services
                 {
                     if (cursors.TryGetValue(type, out var cursor) && cursor != null) SetCursor(state, type, cursor);
                 }
-                state.cursorAccount = AccountKey(config.userToken);
+                state.cursorAccount = AccountKey(config.AccountAnchor());
                 if (full) state.fullImportAt = Stamp(DateTime.UtcNow);
                 state.syncedAt = activities?.all ?? Stamp(run.StartedUtc);   // Simkl's own clock, read before the pull, so a change made during the run is caught next time
 
@@ -474,6 +476,13 @@ namespace Simkl.Services
         // Anime matched through TVDB/IMDB/TMDB is stored with TVDB seasons in Emby, so translate Simkl's numbers.
         // A tvdb season of 0 is deliberate (specials, anime-lists tvdbseason=0 mappings) and must never fall through
         // to mapped_tvdb_seasons, which cannot express season 0 (the server collapses '0' to [1]).
+        //
+        // The per-episode block is what this trusts, and deliberately so. When an episode has no mapping the server
+        // fills the block with Simkl's own numbers, which is right for the episode number and says season 1 for
+        // every anime cour. mapped_tvdb_seasons is NOT a second opinion to fall back on there: joinTVtoAnime.php
+        // writes it from the same pass that writes ext_season/ext_episode, so the two are set together or not at
+        // all, and an entry carrying a mapped season with no mapped episodes is a stale leftover from a mapping
+        // that has since been removed. Preferring it would act on exactly the data that is known to be out of date.
         private static (int, int) TvdbCoordinates(AllItemsEntry entry, AllItemsSeason season, AllItemsEpisode episode)
         {
             var s = ParseInt(episode.tvdb?.season);
@@ -530,10 +539,9 @@ namespace Simkl.Services
         private static string Summary(Job job, bool nothingChanged)
         {
             if (nothingChanged) return "Nothing new on Simkl since the last import.";
-            var text = "Marked " + job.MoviesMarked + " movies and " + job.EpisodesMarked + " episodes as played. "
+            return "Marked " + job.MoviesMarked + " movies and " + job.EpisodesMarked + " episodes as played. "
                 + job.AlreadyPlayed + " already played" + (job.Overwrite ? " (" + job.Refreshed + " watch dates refreshed from Simkl)" : "") + ". "
                 + "Not in your Emby library: " + job.MoviesNotInLibrary + " movies, " + job.ShowsNotInLibrary + " shows, " + job.EpisodesNotInLibrary + " episodes.";
-            return text;
         }
 
         private static string Describe(SimklIds ids)
